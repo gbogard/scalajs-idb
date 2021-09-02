@@ -1,11 +1,12 @@
 package dev.guillaumebogard.idb.internal
 
 import scala.scalajs.js
+import dev.guillaumebogard.idb._
 import scala.scalajs.js.annotation._
 
 @js.native
 @JSGlobal("indexedDB")
-val indexedDb: IDBFactory = js.native
+val indexedDB: IDBFactory = js.native
 
 @js.native
 trait IDBFactory extends js.Object {
@@ -33,12 +34,22 @@ trait IDBRequest[Target, Result] extends js.Object {
 
   var onsuccess: js.Function1[DOMEvent[Target], Unit] = js.native
   var onerror: js.Function1[DOMEvent[Unit], Unit] = js.native
+
+  @js.native
+  trait Completed extends IDBRequest[Target, Result] {
+    override def result: Result = js.native
+  }
+
+  @js.native
+  trait Errored extends IDBRequest[Target, Result] {
+    override def error: DOMException = js.native
+  }
 }
 
 @js.native
 trait IDBOpenDBRequest extends IDBRequest[IDBOpenDBRequest, IDBDatabase] {
   var onupgradeneeded: js.Function1[UpgradeNeededEvent, Unit] = js.native
-  var onblocked: js.Function1[DOMEvent[IDBOpenDBRequest], Unit] = js.native
+  var onblocked: js.Function1[DOMEvent[IDBOpenDBRequest#Completed], Unit] = js.native
 }
 
 @JSExportAll
@@ -59,7 +70,7 @@ trait DOMEvent[Target] extends js.Object {
 }
 
 @js.native
-trait UpgradeNeededEvent extends DOMEvent[IDBDatabase] {
+trait UpgradeNeededEvent extends DOMEvent[IDBOpenDBRequest#Completed] {
   val oldVersion: Int = js.native
   val newVersion: Int = js.native
 }

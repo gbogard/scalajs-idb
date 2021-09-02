@@ -10,7 +10,20 @@ object BindingTest extends TestSuite {
   val tests = Tests {
     test("IDBFactory") {
       test("opening a database should succeed") {
-        indexedDb.openFuture("test").open
+        indexedDB.openFuture("test").open
+      }
+    }
+
+    test("IDBDatabase") {
+      test("creating an object store without options") {
+        indexedDB
+          .openFuture(
+            "test2",
+            onUpgradeNeeded = event => {
+              event.target.result.createObjectStore("champions")
+            }
+          )
+          .open
       }
     }
   }

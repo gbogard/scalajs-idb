@@ -1,4 +1,4 @@
-package dev.guillaumebogard.idb.internal
+package dev.guillaumebogard.idb
 
 import scala.scalajs.js
 import js.JSConverters._
