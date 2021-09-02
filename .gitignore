@@ -1,0 +1,21 @@
+# dependencies
+node_modules
+
+# testing
+coverage
+
+# scala
+target
+.bloop
+.metals
+.bsp
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
