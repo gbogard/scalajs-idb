@@ -11,6 +11,8 @@ enum KeyPath:
 object KeyPath:
   opaque type JS = js.Array[String] | Null
 
+  given Conversion[KeyPath, JS] = toJS(_)
+
   def fromJS(input: JS): KeyPath = input match
     case arr: js.Array[String] => Path(arr.map(Identifier(_): Identifier).toSeq)
     case null => Empty
