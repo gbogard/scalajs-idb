@@ -2,6 +2,7 @@ package dev.guillaumebogard.idb.internal
 
 import scala.scalajs.js
 import dev.guillaumebogard.idb._
+import dev.guillaumebogard.idb.api._
 import scala.scalajs.js.annotation._
 import js.JSConverters._
 
@@ -23,32 +24,27 @@ trait IDBDatabase extends js.Object {
   def close(): Unit = js.native
 
   def createObjectStore(
-      name: IDBObjectStore.Name
+      name: api.IDBObjectStore.Name
   ): IDBObjectStore.WithOutOfLineKey = js.native
 
   def createObjectStore(
-      name: IDBObjectStore.Name,
+      name: api.IDBObjectStore.Name,
       options: IDBObjectStore.CreateObjectStoreOptions
   ): IDBObjectStore.WithInlineKey = js.native
 
-  def transaction(stores: js.Array[IDBObjectStore.Name]): IDBTransaction = js.native
+  def transaction(stores: js.Array[api.IDBObjectStore.Name]): IDBTransaction = js.native
 
   def transaction(
-      stores: js.Array[IDBObjectStore.Name],
+      stores: js.Array[api.IDBObjectStore.Name],
       mode: IDBTransaction.Mode.JS
   ): IDBTransaction = js.native
 
 }
 
 extension (db: IDBDatabase)
-  def transaction(store: IDBObjectStore.Name*): IDBTransaction = transaction(store.toJSArray)
-  def transaction(mode: IDBTransaction.Mode, store: IDBObjectStore.Name*): IDBTransaction =
+  def transaction(store: api.IDBObjectStore.Name*): IDBTransaction = transaction(store.toJSArray)
+  def transaction(mode: IDBTransaction.Mode, store: api.IDBObjectStore.Name*): IDBTransaction =
     transaction(store.toJSArray, mode.toJS)
-
-object IDBDatabase:
-  opaque type Name = String
-  object Name:
-    def apply(name: String): Name = name
 
 @js.native
 trait IDBRequest[Target, Result] extends js.Object {
@@ -99,29 +95,12 @@ object IDBObjectStore:
     def add[Value <: js.Any](value: Value, key: Key): AddRequest = js.native
   }
 
-  opaque type Name = String
-  object Name:
-    def apply(name: String): Name = name
-
 @js.native
 trait IDBTransaction extends js.Object {
   val db: IDBDatabase = js.native
   val mode: IDBTransaction.Mode.JS = js.native
-  def objectStore[Store <: IDBObjectStore](name: IDBObjectStore.Name): Store = js.native
+  def objectStore[Store <: IDBObjectStore](name: api.IDBObjectStore.Name): Store = js.native
 }
-
-object IDBTransaction:
-  enum Mode:
-    case ReadWrite, ReadOnly
-
-  object Mode:
-    opaque type JS = String
-    extension (mode: Mode)
-      def toJS: JS =
-        mode match
-          case ReadOnly  => "readonly"
-          case ReadWrite => "readwrite"
-    given Conversion[Mode, JS] = toJS(_)
 
 @js.native
 trait DOMException extends js.Error

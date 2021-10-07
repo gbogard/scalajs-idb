@@ -1,4 +1,4 @@
-package dev.guillaumebogard.idb
+  package dev.guillaumebogard.idb.api
 
 import scala.scalajs.js
 import js.JSConverters._

@@ -5,20 +5,16 @@ import scala.concurrent._
 import scala.scalajs.js
 import Backend._
 
-trait Backend[F[_]] extends Monad[F] with Async[F]
+trait Backend[F[_]]:
+  val monadF: Monad[F]
+  val asyncF: Async[F]
+
+given [F[_]](using backend: Backend[F]): Monad[F] = backend.monadF
+given [F[_]](using backend: Backend[F]): Async[F] = backend.asyncF
 
 given (using ec: ExecutionContext): Backend[Future] with
-  def pure[A](value: A): Future[A] = Future.successful(value)
-  def map[A, B](fa: Future[A])(f: A => B): Future[B] = fa.map(f)
-  def flatMap[A, B](fa: Future[A])(f: A => Future[B]): Future[B] = fa.flatMap(f)
-  def async[A](k: (Either[Throwable, A] => Unit) => Unit): Future[A] = {
-    val promise = Promise[A]()
-    val cb: Either[Throwable, A] => Unit =
-      case Right(res) => promise.success(res)
-      case Left(err)  => promise.failure(err)
-    k(cb)
-    promise.future
-  }
+  val monadF = Monad[Future]
+  val asyncF = Async[Future]
 
 object Backend:
   def runRequest[F[_]: Backend, T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =

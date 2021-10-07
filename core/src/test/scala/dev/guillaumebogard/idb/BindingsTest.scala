@@ -4,7 +4,7 @@ import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import dev.guillaumebogard.idb.internal._
-import dev.guillaumebogard.idb.internal.FutureAPI._
+import dev.guillaumebogard.idb.api._
 import scala.concurrent.Promise
 
 object BindingTest extends TestSuite {

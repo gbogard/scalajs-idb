@@ -1,4 +1,4 @@
-package dev.guillaumebogard.idb
+package dev.guillaumebogard.idb.api
 
 opaque type Key = String
 
