@@ -2,6 +2,9 @@ import org.scalajs.jsenv.selenium._
 
 ThisBuild / version := "0.1.0"
 ThisBuild / organization := "dev.guillaumebogard"
+ThisBuild / organizationName := "Guillaume Bogard"
+ThisBuild / startYear := Some(2021) 
+ThisBuild / licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / scalacOptions ++= Seq("-Yexplicit-nulls")
 
