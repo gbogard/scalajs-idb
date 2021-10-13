@@ -22,8 +22,8 @@ import cats.free.Free
 trait ObjectStore:
   protected val name: ObjectStore.Name
 
-  def get(key: Key): Transaction[Option[js.Object]] = Free.liftF(TransactionA.Get(name, key))
-  def put(value: js.Any, key: Option[Key]) = Free.liftF(TransactionA.Put(name, value, key.orNull))
+  def get(key: Key): Transaction[Option[js.Object]] = Transaction.get(name, key)
+  def put(value: js.Any, key: Option[Key]) = Transaction.put(name, value, key)
 
 object ObjectStore:
   opaque type Name = String
@@ -34,7 +34,6 @@ type Transaction[T] = Free[TransactionA, T]
 
 enum TransactionA[T]:
   case GetObjectStore(name: ObjectStore.Name) extends TransactionA[ObjectStore]
-  case SetMode(mode: Transaction.Mode) extends TransactionA[Unit]
   case Put(store: ObjectStore.Name, value: js.Any, key: Key | Null) extends TransactionA[Unit]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Object]]
 
@@ -55,4 +54,7 @@ object Transaction:
   def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
     Free.liftF(TransactionA.GetObjectStore(name))
 
-  def setMode(mode: Mode): Transaction[Unit] = Free.liftF(TransactionA.SetMode(mode))
+  def get(store: ObjectStore.Name, key: Key): Transaction[Option[js.Object]] =
+    Free.liftF(TransactionA.Get(store, key))
+  def put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) =
+    Free.liftF(TransactionA.Put(store, value, key.orNull))

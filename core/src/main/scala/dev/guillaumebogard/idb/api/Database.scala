@@ -17,9 +17,7 @@
 package dev.guillaumebogard.idb.api
 
 import cats.implicits.*
-import dev.guillaumebogard.idb.Backend
-import dev.guillaumebogard.idb.Backend.given
-import dev.guillaumebogard.idb.internal
+import dev.guillaumebogard.idb.internal.IDBDatabase
 import cats.free.Free
 
 trait Database[F[_]]:
@@ -29,14 +27,17 @@ trait Database[F[_]]:
 
 object Database:
 
-  def open[F[_]: Backend](name: Name, schema: Schema): F[Either[Throwable, Database[F]]] =
+  def open[F[_]](name: Name, schema: Schema)(using backend: Backend[F]): F[Either[Throwable, Database[F]]] = {
+    import backend.given
+
     // TODO: handle upgrade event
-    internal
-      .runOpenRequest(_ => ())(Backend[F].buildOpenRequest(name, schema.lastVersion))
+    backend
+      .runOpenRequest(_ => ())(backend.buildOpenRequest(name, schema.lastVersion))
       .map(res => fromJS(res.database))
       .attempt
+  }
 
-  private def fromJS[F[_]: Backend](db: internal.IDBDatabase) =
+  private def fromJS[F[_]: Backend](db: IDBDatabase) =
     new Database[F]:
       def transact[T](mode: Transaction.Mode)(transaction: Transaction[T]) = ???
 

@@ -38,15 +38,6 @@ lazy val core = project
   )
   .enablePlugins(ScalaJSPlugin)
 
-lazy val example = project
-  .in(file("example"))
-  .settings(
-    name := "scalajs-idb-example",
-    scalaJSUseMainModuleInitializer := true
-  )
-  .dependsOn(core)
-  .enablePlugins(ScalaJSPlugin)
-
 lazy val docs = project
   .in(file("scalajs-idb-docs")) // important: it must not be docs/
   .dependsOn(core)

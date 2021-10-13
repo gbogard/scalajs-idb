@@ -42,7 +42,7 @@ object BindingTest extends TestSuite {
             heroes <- Transaction.getObjectStore(championsStoreName)
             _ <- heroes.put(value, Some(key))
             illaoi <- heroes.get(key)
-          } yield illaoi
+          } yield assert(illaoi == value)
         })
     }
   }

@@ -51,19 +51,12 @@ trait IDBDatabase extends js.Object {
       options: IDBObjectStore.CreateObjectStoreOptions
   ): IDBObjectStore = js.native
 
-  def transaction(stores: js.Array[ObjectStore.Name]): IDBTransaction = js.native
-
   def transaction(
       stores: js.Array[ObjectStore.Name],
       mode: api.Transaction.Mode.JS
   ): IDBTransaction = js.native
 
 }
-
-extension (db: IDBDatabase)
-  def transaction(store: ObjectStore.Name*): IDBTransaction = transaction(store.toJSArray)
-  def transaction(mode: api.Transaction.Mode, store: ObjectStore.Name*): IDBTransaction =
-    transaction(store.toJSArray, mode.toJS)
 
 @js.native
 trait IDBRequest[Target, Result] extends js.Object {
