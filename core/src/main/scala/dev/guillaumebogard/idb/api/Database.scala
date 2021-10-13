@@ -19,11 +19,13 @@ package dev.guillaumebogard.idb.api
 import cats.implicits.*
 import dev.guillaumebogard.idb.Backend
 import dev.guillaumebogard.idb.Backend.given
-import dev.guillaumebogard.idb.api.schema.*
 import dev.guillaumebogard.idb.internal
+import cats.free.Free
 
 trait Database[F[_]]:
-  def transact[T](transaction: Transaction[T]): F[T]
+  def transact[T](mode: Transaction.Mode)(transaction: Transaction[T]): F[T]
+  def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
+    Transaction.getObjectStore(name)
 
 object Database:
 
@@ -36,7 +38,7 @@ object Database:
 
   private def fromJS[F[_]: Backend](db: internal.IDBDatabase) =
     new Database[F]:
-      def transact[T](transaction: Transaction[T]) = ???
+      def transact[T](mode: Transaction.Mode)(transaction: Transaction[T]) = ???
 
   opaque type Name = String
   object Name:

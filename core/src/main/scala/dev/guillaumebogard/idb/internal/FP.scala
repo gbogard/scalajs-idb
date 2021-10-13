@@ -18,6 +18,8 @@ package dev.guillaumebogard.idb.internal
 
 import scala.concurrent._
 
+/** The [[Async]] type class, ported from Cats Effect to avoid unnecessary dependencies in the core project.
+  */
 trait Async[F[_]]:
   def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A]
 

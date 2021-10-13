@@ -23,7 +23,7 @@ trait ObjectStore:
   protected val name: ObjectStore.Name
 
   def get(key: Key): Transaction[Option[js.Object]] = Free.liftF(TransactionA.Get(name, key))
-  def put(value: js.Object, key: Option[Key]) = Free.liftF(TransactionA.Put(name, value, key.orNull))
+  def put(value: js.Any, key: Option[Key]) = Free.liftF(TransactionA.Put(name, value, key.orNull))
 
 object ObjectStore:
   opaque type Name = String
@@ -32,10 +32,10 @@ object ObjectStore:
 
 type Transaction[T] = Free[TransactionA, T]
 
-private enum TransactionA[T]:
+enum TransactionA[T]:
   case GetObjectStore(name: ObjectStore.Name) extends TransactionA[ObjectStore]
   case SetMode(mode: Transaction.Mode) extends TransactionA[Unit]
-  case Put(store: ObjectStore.Name, value: js.Object, key: Key | Null) extends TransactionA[Unit]
+  case Put(store: ObjectStore.Name, value: js.Any, key: Key | Null) extends TransactionA[Unit]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Object]]
 
 object Transaction:
@@ -51,3 +51,8 @@ object Transaction:
           case ReadWrite      => "readwrite"
           case ReadWriteFlush => "readwriteflush"
     given Conversion[Mode, JS] = toJS(_)
+
+  def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
+    Free.liftF(TransactionA.GetObjectStore(name))
+
+  def setMode(mode: Mode): Transaction[Unit] = Free.liftF(TransactionA.SetMode(mode))

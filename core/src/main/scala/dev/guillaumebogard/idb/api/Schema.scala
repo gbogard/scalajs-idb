@@ -1,4 +1,4 @@
-package dev.guillaumebogard.idb.api.schema
+package dev.guillaumebogard.idb.api
 
 import dev.guillaumebogard.idb.api
 
