@@ -16,32 +16,27 @@
 
 package dev.guillaumebogard.idb.api
 
+import cats.implicits.*
 import dev.guillaumebogard.idb.Backend
-import dev.guillaumebogard.idb.given
-import dev.guillaumebogard.idb.internal
-import dev.guillaumebogard.idb.internal.MonadError.*
-import dev.guillaumebogard.idb.internal.Monad.*
 import dev.guillaumebogard.idb.Backend.given
 import dev.guillaumebogard.idb.api.schema.*
+import dev.guillaumebogard.idb.internal
 
-trait IDBDatabase[F[_]]:
-  def transaction(stores: IDBObjectStore.Name*): F[IDBTransaction[F]]
-  def transaction(stores: List[IDBObjectStore.Name], mode: IDBTransaction.Mode): F[IDBTransaction[F]]
+trait Database[F[_]]:
+  def transact[T](transaction: Transaction[T]): F[T]
 
-object IDBDatabase:
+object Database:
 
-  def open[F[_]: Backend](name: Name, schema: Schema): F[Either[Throwable, IDBDatabase[F]]] =
+  def open[F[_]: Backend](name: Name, schema: Schema): F[Either[Throwable, Database[F]]] =
     // TODO: handle upgrade event
-    Backend
+    internal
       .runOpenRequest(_ => ())(Backend[F].buildOpenRequest(name, schema.lastVersion))
       .map(res => fromJS(res.database))
       .attempt
 
-  private def fromJS[F[_]: Backend](db: internal.IDBDatabase): IDBDatabase[F] =
-    new IDBDatabase[F]:
-      def transaction(stores: IDBObjectStore.Name*): F[IDBTransaction[F]] = ???
-      def transaction(stores: List[IDBObjectStore.Name], mode: IDBTransaction.Mode): F[IDBTransaction[F]] =
-        ???
+  private def fromJS[F[_]: Backend](db: internal.IDBDatabase) =
+    new Database[F]:
+      def transact[T](transaction: Transaction[T]) = ???
 
   opaque type Name = String
   object Name:

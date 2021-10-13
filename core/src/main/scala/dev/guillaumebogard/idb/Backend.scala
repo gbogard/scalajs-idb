@@ -17,12 +17,13 @@
 package dev.guillaumebogard.idb
 
 import dev.guillaumebogard.idb.internal.*
-import dev.guillaumebogard.idb.internal.Monad.*
-import dev.guillaumebogard.idb.internal.MonadError.*
+import cats.MonadError
+import cats.implicits.given
 import scala.concurrent.*
 import scala.scalajs.js
 import Backend.*
 import scala.util.Try
+import java.util.Arrays
 
 trait Backend[F[_]]:
   val monadF: MonadError[F, Throwable]
@@ -31,7 +32,7 @@ trait Backend[F[_]]:
   /** Builds a [[IDBOpenDBRequest]] that an then be passed to [[Backend.runOpenRequest]] to open a new
     * database
     */
-  def buildOpenRequest(name: api.IDBDatabase.Name, version: Int): F[IDBOpenDBRequest]
+  def buildOpenRequest(name: api.Database.Name, version: Int): F[IDBOpenDBRequest]
 
 object Backend:
   def apply[F[_]](using b: Backend[F]): Backend[F] = b
@@ -42,46 +43,8 @@ object Backend:
   given (using ec: ExecutionContext): Backend[Future] with
     val monadF = MonadError[Future, Throwable]
     val asyncF = Async[Future]
-    def buildOpenRequest(name: api.IDBDatabase.Name, version: Int) =
+    def buildOpenRequest(name: api.Database.Name, version: Int) =
       Future.fromTry(Try(indexedDB.open(name, version)))
 
-  def runRequest[F[_]: Backend, T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =
-    reqF.flatMap { req =>
-      Async[F].async { cb =>
-        req.onsuccess = event => {
-          val result = IDBRequestResult(req, event, req.result.asInstanceOf[R])
-          cb(Right(result))
-        }
-        req.onerror = _ => {
-          cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
-        }
-      }
-    }
 
-  def runOpenRequest[F[_]: Backend, R](upgrade: UpgradeNeededEvent => R)(
-      reqF: F[IDBOpenDBRequest]
-  ): F[IDBOpenResult[R]] =
-    reqF.flatMap { req =>
-      var upgradeResult: Option[R] = None
-      Async[F].async { cb =>
-        req.onsuccess = event =>
-          cb(Right(IDBOpenResult(req, event, event.target.result.asInstanceOf[IDBDatabase], upgradeResult)))
-        req.onerror = _ => cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
-        req.onupgradeneeded = event => {
-          upgradeResult = Some(upgrade(event))
-        }
-      }
-    }
 
-  final case class IDBRequestResult[Target, Result](
-      req: IDBRequest[Target, Result],
-      event: DOMEvent[Target],
-      result: Result
-  )
-
-  final case class IDBOpenResult[UpgradeResult](
-      req: IDBOpenDBRequest,
-      event: DOMEvent[IDBOpenDBRequest],
-      database: IDBDatabase,
-      upgradeResult: Option[UpgradeResult]
-  )

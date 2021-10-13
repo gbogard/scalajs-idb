@@ -31,8 +31,8 @@ val indexedDB: IDBFactory = js.native
 
 @js.native
 trait IDBFactory extends js.Object {
-  def open(name: IDBDatabase.Name): IDBOpenDBRequest
-  def open(name: IDBDatabase.Name, version: Int): IDBOpenDBRequest
+  def open(name: api.Database.Name): IDBOpenDBRequest
+  def open(name: api.Database.Name, version: Int): IDBOpenDBRequest
 }
 
 @js.native
@@ -43,26 +43,26 @@ trait IDBDatabase extends js.Object {
   def close(): Unit = js.native
 
   def createObjectStore(
-      name: api.IDBObjectStore.Name
-  ): IDBObjectStore.WithOutOfLineKey = js.native
+      name: ObjectStore.Name
+  ): IDBObjectStore = js.native
 
   def createObjectStore(
-      name: api.IDBObjectStore.Name,
+      name: ObjectStore.Name,
       options: IDBObjectStore.CreateObjectStoreOptions
-  ): IDBObjectStore.WithInlineKey = js.native
+  ): IDBObjectStore = js.native
 
-  def transaction(stores: js.Array[api.IDBObjectStore.Name]): IDBTransaction = js.native
+  def transaction(stores: js.Array[ObjectStore.Name]): IDBTransaction = js.native
 
   def transaction(
-      stores: js.Array[api.IDBObjectStore.Name],
-      mode: IDBTransaction.Mode.JS
+      stores: js.Array[ObjectStore.Name],
+      mode: api.Transaction.Mode.JS
   ): IDBTransaction = js.native
 
 }
 
 extension (db: IDBDatabase)
-  def transaction(store: api.IDBObjectStore.Name*): IDBTransaction = transaction(store.toJSArray)
-  def transaction(mode: IDBTransaction.Mode, store: api.IDBObjectStore.Name*): IDBTransaction =
+  def transaction(store: ObjectStore.Name*): IDBTransaction = transaction(store.toJSArray)
+  def transaction(mode: api.Transaction.Mode, store: ObjectStore.Name*): IDBTransaction =
     transaction(store.toJSArray, mode.toJS)
 
 @js.native
@@ -94,8 +94,9 @@ trait IDBOpenDBRequest extends IDBRequest[IDBOpenDBRequest, IDBDatabase] {
 trait AddRequest extends IDBRequest[AddRequest, Key]
 
 @js.native
-sealed trait IDBObjectStore extends js.Object {
+trait IDBObjectStore extends js.Object {
   def get(key: Key): IDBRequest[Unit, js.UndefOr[js.Any]] = js.native
+  def add[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
 }
 
 object IDBObjectStore:
@@ -105,20 +106,11 @@ object IDBObjectStore:
       autoIncrement: js.UndefOr[Boolean]
   )
 
-  @js.native
-  trait WithInlineKey extends IDBObjectStore {
-    def add(value: js.Object): IDBRequest[Unit, Unit] = js.native
-  }
-  @js.native
-  trait WithOutOfLineKey extends IDBObjectStore {
-    def add[Value <: js.Any](value: Value, key: Key): AddRequest = js.native
-  }
-
 @js.native
 trait IDBTransaction extends js.Object {
   val db: IDBDatabase = js.native
-  val mode: IDBTransaction.Mode.JS = js.native
-  def objectStore[Store <: IDBObjectStore](name: api.IDBObjectStore.Name): Store = js.native
+  val mode: api.Transaction.Mode.JS = js.native
+  def objectStore[Store <: IDBObjectStore](name: ObjectStore.Name): Store = js.native
 }
 
 @js.native

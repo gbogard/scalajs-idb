@@ -1,24 +1,25 @@
 # scalajs-idb, a statically-typed, idiomatic interface to IndexedDB (WIP)
 
-### Usage
+Installation
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+```scala
+libraryDependencies += "dev.guillaumebogard" %%% "scalajs-idb-core" % "0.1.0"
+```
 
 ### Roadmap:
 
 - [ ] Low level bindings:
   - `IDBFactory`:
-    - [ ] `open`
+    - [x] `open`
   - `IDBDatabase`:
-    - [ ] `createObjectStore`
-    - [ ] `transaction`
+    - [x] `createObjectStore`
+    - [x] `transaction`
     - [ ] `close`
   - `IDBTransaction`:
-    - [ ] `objectStore`
+    - [x] `objectStore`
   - `IDBObjectStore`
-    - [ ] `add`
+    - [x] `add`
 - [ ] Future bindings
 - [ ] Cats Effect IO bindings 
 - [ ] Database schema management
-- [ ] Safe resource acquisition/cleaning
 - [ ] Safe transactions using Free

@@ -11,7 +11,7 @@ object Schema:
 
   extension (schema: Schema)
     def lastVersion: Int = schema.length - 1
-    def createObjectStore(name: api.IDBObjectStore.Name) = schema :+ SchemaOperation.CreateObjectStore(name)
+    def createObjectStore(name: api.ObjectStore.Name) = schema :+ SchemaOperation.CreateObjectStore(name)
 
 enum SchemaOperation:
-  case CreateObjectStore(name: api.IDBObjectStore.Name)
+  case CreateObjectStore(name: api.ObjectStore.Name)
