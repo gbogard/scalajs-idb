@@ -27,7 +27,7 @@ import js.JSConverters._
 
 @js.native
 @JSGlobal("indexedDB")
-val indexedDB: IDBFactory = js.native
+private val indexedDB: IDBFactory = js.native
 
 @js.native
 trait IDBFactory extends js.Object {
@@ -36,7 +36,7 @@ trait IDBFactory extends js.Object {
 }
 
 @js.native
-trait IDBDatabase extends js.Object {
+private trait IDBDatabase extends js.Object {
   val name: String = js.native
   val version: Int = js.native
 
@@ -59,7 +59,7 @@ trait IDBDatabase extends js.Object {
 }
 
 @js.native
-trait IDBRequest[Target, Result] extends js.Object {
+private trait IDBRequest[Target, Result] extends js.Object {
   def result: Result | Null = js.native
   def error: DOMException | Null = js.native
 
@@ -78,21 +78,21 @@ trait IDBRequest[Target, Result] extends js.Object {
 }
 
 @js.native
-trait IDBOpenDBRequest extends IDBRequest[IDBOpenDBRequest, IDBDatabase] {
+private trait IDBOpenDBRequest extends IDBRequest[IDBOpenDBRequest, IDBDatabase] {
   var onupgradeneeded: js.Function1[UpgradeNeededEvent, Unit] = js.native
   var onblocked: js.Function1[DOMEvent[IDBOpenDBRequest#Completed], Unit] = js.native
 }
 
 @js.native
-trait AddRequest extends IDBRequest[AddRequest, Key]
+private trait AddRequest extends IDBRequest[AddRequest, Key]
 
 @js.native
-trait IDBObjectStore extends js.Object {
+private trait IDBObjectStore extends js.Object {
   def get(key: Key): IDBRequest[Unit, js.UndefOr[js.Any]] = js.native
   def add[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
 }
 
-object IDBObjectStore:
+private object IDBObjectStore:
   @JSExportAll
   case class CreateObjectStoreOptions(
       keyPath: KeyPath.JS,
@@ -100,22 +100,22 @@ object IDBObjectStore:
   )
 
 @js.native
-trait IDBTransaction extends js.Object {
+private trait IDBTransaction extends js.Object {
   val db: IDBDatabase = js.native
   val mode: api.Transaction.Mode.JS = js.native
   def objectStore[Store <: IDBObjectStore](name: ObjectStore.Name): Store = js.native
 }
 
 @js.native
-trait DOMException extends js.Error
+private trait DOMException extends js.Error
 
 @js.native
-trait DOMEvent[Target] extends js.Object {
+private trait DOMEvent[Target] extends js.Object {
   val target: Target = js.native
 }
 
 @js.native
-trait UpgradeNeededEvent extends DOMEvent[IDBOpenDBRequest#Completed] {
+private trait UpgradeNeededEvent extends DOMEvent[IDBOpenDBRequest#Completed] {
   val oldVersion: Int = js.native
   val newVersion: Int = js.native
 }

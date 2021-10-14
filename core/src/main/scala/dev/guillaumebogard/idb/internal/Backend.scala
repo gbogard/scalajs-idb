@@ -40,7 +40,7 @@ trait Backend[F[_]]:
       mode: api.Transaction.Mode
   ): F[IDBTransaction]
 
-  def runRequest[T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =
+  private[internal] def runRequest[T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =
     reqF.flatMap { req =>
       Async[F].async { cb =>
         req.onsuccess = event => {
@@ -53,7 +53,7 @@ trait Backend[F[_]]:
       }
     }
 
-  def runOpenRequest[R](upgrade: UpgradeNeededEvent => R)(
+  private[internal] def runOpenRequest[R](upgrade: UpgradeNeededEvent => R)(
       reqF: F[IDBOpenDBRequest]
   ): F[IDBOpenResult[R]] =
     reqF.flatMap { req =>
@@ -70,6 +70,22 @@ trait Backend[F[_]]:
 
 object Backend:
   def apply[F[_]](using b: Backend[F]): Backend[F] = b
+
+  def openDatabase[F[_]](name: api.Database.Name, schema: api.Schema)(using
+      backend: Backend[F]
+  ): F[Either[Throwable, api.Database[F]]] = {
+    import backend.given
+
+    def fromJS[F[_]: Backend](db: IDBDatabase) =
+      new api.Database[F]:
+        def transact[T](mode: api.Transaction.Mode)(transaction: api.Transaction[T]) = ???
+
+    // TODO: handle upgrade event
+    backend
+      .runOpenRequest(_ => ())(backend.buildOpenRequest(name, schema.lastVersion))
+      .map(res => fromJS(res.database))
+      .attempt
+  }
 
   given (using ec: ExecutionContext): Backend[Future] with
     val monadF = MonadError[Future, Throwable]

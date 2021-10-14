@@ -19,7 +19,11 @@ libraryDependencies += "dev.guillaumebogard" %%% "scalajs-idb-core" % "0.1.0"
     - [x] `objectStore`
   - `IDBObjectStore`
     - [x] `add`
-- [ ] Future bindings
-- [ ] Cats Effect IO bindings 
+- [ ] Future Backend
+- [ ] Cats Effect IO Backend 
 - [ ] Database schema management
 - [ ] Safe transactions using Free
+- [ ] Get / Put type class
+- [ ] Github actions for build, doc and publish
+- [ ] Document first version
+- [ ] Publish first version

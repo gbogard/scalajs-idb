@@ -4,7 +4,7 @@ import cats.*
 import cats.data.State
 import dev.guillaumebogard.idb.api.*
 
-object TransactionInterpreter:
+private[internal] object TransactionInterpreter:
   private type StoreCollectorM[A] = State[Vector[ObjectStore.Name], A]
 
   /** The store collector is responsible for turning transactions into sequences of [[ObjectStore.Name]] that
