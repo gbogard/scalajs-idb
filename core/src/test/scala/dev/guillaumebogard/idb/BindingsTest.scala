@@ -29,13 +29,14 @@ object BindingTest extends TestSuite {
 
   val tests = Tests {
     test("Simple get and put test") {
-      val dbName = Database.Name("test")
       val championsStoreName = ObjectStore.Name("champions")
+      val dbName = Database.Name("test")
+      val schema = Schema().createObjectStore(championsStoreName)
       val key = Key("favChamp")
       val value: js.Any = "Illaoi"
 
       Database
-        .open[Future](dbName, Schema())
+        .open[Future](dbName, schema)
         .rethrow
         .flatMap(_.transact(Transaction.Mode.ReadWrite) {
           for {

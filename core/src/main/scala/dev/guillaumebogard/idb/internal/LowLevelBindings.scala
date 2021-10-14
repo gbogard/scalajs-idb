@@ -103,7 +103,7 @@ private object IDBObjectStore:
 private trait IDBTransaction extends js.Object {
   val db: IDBDatabase = js.native
   val mode: api.Transaction.Mode.JS = js.native
-  def objectStore[Store <: IDBObjectStore](name: ObjectStore.Name): Store = js.native
+  def objectStore(name: ObjectStore.Name): IDBObjectStore = js.native
 }
 
 @js.native

@@ -30,15 +30,20 @@ trait Backend[F[_]]:
   given monadF: MonadError[F, Throwable]
   given asyncF: Async[F]
 
-  /** Builds a [[IDBOpenDBRequest]] that an then be passed to [[runOpenRequest]] to open a new database
-    */
-  def buildOpenRequest(name: api.Database.Name, version: Int): F[IDBOpenDBRequest]
+  private[internal] def delay[A](thunk: => A): F[A]
 
-  def buildTransaction(
+  /** Builds a [[IDBOpenDBRequest]] that can then be passed to [[runOpenRequest]] to open a new database
+    */
+  private[internal] def buildOpenRequest(name: api.Database.Name, version: Int): F[IDBOpenDBRequest] =
+    delay(indexedDB.open(name, version))
+
+  /** Opens a new transaction
+    */
+  private[internal] def buildTransaction(
       database: IDBDatabase,
       stores: Seq[api.ObjectStore.Name],
       mode: api.Transaction.Mode
-  ): F[IDBTransaction]
+  ): F[IDBTransaction] = delay(database.transaction(stores.toJSArray, mode.toJS))
 
   private[internal] def runRequest[T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =
     reqF.flatMap { req =>
@@ -53,7 +58,10 @@ trait Backend[F[_]]:
       }
     }
 
-  private[internal] def runOpenRequest[R](upgrade: UpgradeNeededEvent => R)(
+  /** Runs a [[IDBOpenDBRequest]] and returns a [[FIDBOpenResult[R]]. When the 'upgradeneeded' event is fired
+    * by the javascript runtime, the [[unsafeUpgrade]] callback is invoked synchromously
+    */
+  private[internal] def runOpenRequest[R](unsafeUpgrade: UpgradeNeededEvent => R)(
       reqF: F[IDBOpenDBRequest]
   ): F[IDBOpenResult[R]] =
     reqF.flatMap { req =>
@@ -63,7 +71,7 @@ trait Backend[F[_]]:
           cb(Right(IDBOpenResult(req, event, event.target.result.asInstanceOf[IDBDatabase], upgradeResult)))
         req.onerror = _ => cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
         req.onupgradeneeded = event => {
-          upgradeResult = Some(upgrade(event))
+          upgradeResult = Some(unsafeUpgrade(event))
         }
       }
     }
@@ -78,11 +86,13 @@ object Backend:
 
     def fromJS[F[_]: Backend](db: IDBDatabase) =
       new api.Database[F]:
-        def transact[T](mode: api.Transaction.Mode)(transaction: api.Transaction[T]) = ???
+        def transact[T](mode: api.Transaction.Mode)(transaction: api.Transaction[T]) =
+          TransactionInterpreter(db, mode, transaction)
 
-    // TODO: handle upgrade event
     backend
-      .runOpenRequest(_ => ())(backend.buildOpenRequest(name, schema.lastVersion))
+      .runOpenRequest(SchemaExecutor.unsafeMigrateSchema(_, schema))(
+        backend.buildOpenRequest(name, schema.lastVersion)
+      )
       .map(res => fromJS(res.database))
       .attempt
   }
@@ -90,15 +100,7 @@ object Backend:
   given (using ec: ExecutionContext): Backend[Future] with
     val monadF = MonadError[Future, Throwable]
     val asyncF = Async[Future]
-
-    def buildOpenRequest(name: api.Database.Name, version: Int) =
-      Future.fromTry(Try(indexedDB.open(name, version)))
-
-    def buildTransaction(
-        database: IDBDatabase,
-        stores: Seq[api.ObjectStore.Name],
-        mode: api.Transaction.Mode
-    ): Future[IDBTransaction] = Future.fromTry(Try(database.transaction(stores.toJSArray, mode)))
+    def delay[A](thunk: => A): Future[A] = Future.fromTry(Try(thunk))
 
   final case class IDBRequestResult[Target, Result](
       req: IDBRequest[Target, Result],
