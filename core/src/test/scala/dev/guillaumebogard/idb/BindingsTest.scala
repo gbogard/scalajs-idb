@@ -22,13 +22,14 @@ import dev.guillaumebogard.idb.internal._
 import dev.guillaumebogard.idb.api._
 import scala.concurrent.{Future, ExecutionContext}
 import cats.implicits.given
+import cats.data.NonEmptyList
 
 given ec: ExecutionContext = ExecutionContext.global
 
 object BindingTest extends TestSuite {
 
   val tests = Tests {
-    test("Simple get and put test") {
+    test("Simple put and get test") {
       val championsStoreName = ObjectStore.Name("champions")
       val dbName = Database.Name("test")
       val schema = Schema().createObjectStore(championsStoreName)
@@ -38,12 +39,13 @@ object BindingTest extends TestSuite {
       Database
         .open[Future](dbName, schema)
         .rethrow
-        .flatMap(_.transact(Transaction.Mode.ReadWrite) {
+        .flatMap(_.readWrite(NonEmptyList.of(championsStoreName)) {
           for {
             heroes <- Transaction.getObjectStore(championsStoreName)
             _ <- heroes.put(value, Some(key))
             illaoi <- heroes.get(key)
-          } yield assert(illaoi == value)
+            _ = println(illaoi)
+          } yield assert(illaoi == Some(value))
         })
     }
   }

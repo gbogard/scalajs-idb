@@ -16,12 +16,20 @@
 
 package dev.guillaumebogard.idb.api
 
+import cats.data.NonEmptyList
 import cats.implicits.*
-import dev.guillaumebogard.idb.internal
 import cats.free.Free
+import dev.guillaumebogard.idb.internal
 
 trait Database[F[_]]:
-  def transact[T](mode: Transaction.Mode)(transaction: Transaction[T]): F[T]
+  def transact[T](mode: Transaction.Mode, stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T]
+
+  def readOnly[T](stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T] =
+    transact(Transaction.Mode.ReadOnly, stores)(transaction)
+
+  def readWrite[T](stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T] =
+    transact(Transaction.Mode.ReadWrite, stores)(transaction)
+
   def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
     Transaction.getObjectStore(name)
 

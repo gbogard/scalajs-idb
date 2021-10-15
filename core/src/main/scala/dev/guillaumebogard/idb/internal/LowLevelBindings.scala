@@ -90,6 +90,7 @@ private trait AddRequest extends IDBRequest[AddRequest, Key]
 private trait IDBObjectStore extends js.Object {
   def get(key: Key): IDBRequest[Unit, js.UndefOr[js.Any]] = js.native
   def add[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
+  def put[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
 }
 
 private object IDBObjectStore:

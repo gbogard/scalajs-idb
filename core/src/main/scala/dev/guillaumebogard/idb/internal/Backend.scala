@@ -19,6 +19,8 @@ package dev.guillaumebogard.idb.internal
 import Backend.*
 import cats.MonadError
 import cats.implicits.given
+import cats.data.NonEmptyList
+import dev.guillaumebogard.idb.internal
 import dev.guillaumebogard.idb.api
 import java.util.Arrays
 import scala.concurrent.*
@@ -41,9 +43,9 @@ trait Backend[F[_]]:
     */
   private[internal] def buildTransaction(
       database: IDBDatabase,
-      stores: Seq[api.ObjectStore.Name],
+      stores: NonEmptyList[api.ObjectStore.Name],
       mode: api.Transaction.Mode
-  ): F[IDBTransaction] = delay(database.transaction(stores.toJSArray, mode.toJS))
+  ): F[IDBTransaction] = delay(database.transaction(stores.toList.toJSArray, mode.toJS))
 
   private[internal] def runRequest[T, R](reqF: F[IDBRequest[T, R]]): F[IDBRequestResult[T, R]] =
     reqF.flatMap { req =>
@@ -84,16 +86,13 @@ object Backend:
   ): F[Either[Throwable, api.Database[F]]] = {
     import backend.given
 
-    def fromJS[F[_]: Backend](db: IDBDatabase) =
-      new api.Database[F]:
-        def transact[T](mode: api.Transaction.Mode)(transaction: api.Transaction[T]) =
-          TransactionInterpreter(db, mode, transaction)
+
 
     backend
       .runOpenRequest(SchemaExecutor.unsafeMigrateSchema(_, schema))(
         backend.buildOpenRequest(name, schema.lastVersion)
       )
-      .map(res => fromJS(res.database))
+      .map(res => buildDatabaseFromJS(res.database))
       .attempt
   }
 
@@ -114,3 +113,11 @@ object Backend:
       database: IDBDatabase,
       upgradeResult: Option[UpgradeResult]
   )
+
+  private def buildDatabaseFromJS[F[_]: Backend](db: IDBDatabase) =
+    new api.Database[F]:
+      def transact[T](
+        mode: api.Transaction.Mode, 
+        stores: NonEmptyList[api.ObjectStore.Name]
+      )(transaction: api.Transaction[T]) =
+        TransactionInterpreter(db, stores, mode, transaction)
