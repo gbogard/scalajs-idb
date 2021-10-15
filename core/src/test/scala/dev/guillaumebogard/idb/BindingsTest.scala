@@ -18,8 +18,7 @@ package dev.guillaumebogard.idb
 
 import utest._
 import scala.scalajs.js
-import dev.guillaumebogard.idb.internal._
-import dev.guillaumebogard.idb.api._
+import dev.guillaumebogard.idb.api.*
 import scala.concurrent.{Future, ExecutionContext}
 import cats.implicits.given
 import cats.data.NonEmptyList
@@ -28,7 +27,7 @@ given ec: ExecutionContext = ExecutionContext.global
 
 object BindingTest extends TestSuite {
 
-  val tests = Tests {
+val tests = Tests {
     test("Simple put and get test") {
       val championsStoreName = ObjectStore.Name("champions")
       val dbName = Database.Name("test")
@@ -44,8 +43,7 @@ object BindingTest extends TestSuite {
             heroes <- Transaction.getObjectStore(championsStoreName)
             _ <- heroes.put(value, Some(key))
             illaoi <- heroes.get(key)
-            _ = println(illaoi)
-          } yield assert(illaoi == Some(value))
+          } yield illaoi == Some(value)
         })
     }
   }

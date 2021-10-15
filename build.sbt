@@ -10,17 +10,19 @@ ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / scalacOptions ++= Seq("-Yexplicit-nulls")
 
 lazy val testSettings = Seq(
-  libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.10" % "test",
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "utest" % "0.7.10" % "test"
+  ),
   testFrameworks += new TestFramework("utest.runner.Framework"),
   Test / jsEnv := new SeleniumJSEnv(
-    new org.openqa.selenium.firefox.FirefoxOptions(),
+    new org.openqa.selenium.firefox.FirefoxOptions().setHeadless(true),
     SeleniumJSEnv.Config()
   )
 )
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core)
+  .aggregate(core, catsEffect)
   .settings(
     crossScalaVersions := Nil,
     publish / skip := true
@@ -38,14 +40,11 @@ lazy val core = project
   )
   .enablePlugins(ScalaJSPlugin)
 
-lazy val docs = project
-  .in(file("scalajs-idb-docs")) // important: it must not be docs/
-  .dependsOn(core)
-  .enablePlugins(MdocPlugin)
+lazy val catsEffect = project
+  .in(file("cats-effect"))
   .settings(
-    mdocIn := file("docs-source"),
-    mdocOut := file("docs"),
-    mdocVariables := Map(
-      "VERSION" -> version.value
-    )
+    name := "scalajs-idb-cats-effect",
+    testSettings,
+    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.2.9"
   )
+  .dependsOn(core % "compile->compile;test->test")
