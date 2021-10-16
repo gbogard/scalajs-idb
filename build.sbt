@@ -48,3 +48,4 @@ lazy val catsEffect = project
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.2.9"
   )
   .dependsOn(core % "compile->compile;test->test")
+  .enablePlugins(ScalaJSPlugin)

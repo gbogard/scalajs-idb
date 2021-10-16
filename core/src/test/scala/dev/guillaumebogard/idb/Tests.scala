@@ -25,26 +25,35 @@ import cats.data.NonEmptyList
 
 given ec: ExecutionContext = ExecutionContext.global
 
-object BindingTest extends TestSuite {
+class TestsUsingBackend[F[_]](toFuture: [A] => F[A] => Future[A])(using backend: Backend[F])
+    extends TestSuite {
+  import backend.given
 
-val tests = Tests {
+  val tests = Tests {
     test("Simple put and get test") {
       val championsStoreName = ObjectStore.Name("champions")
       val dbName = Database.Name("test")
       val schema = Schema().createObjectStore(championsStoreName)
       val key = Key("favChamp")
-      val value: js.Any = "Illaoi"
 
-      Database
-        .open[Future](dbName, schema)
-        .rethrow
-        .flatMap(_.readWrite(NonEmptyList.of(championsStoreName)) {
-          for {
-            heroes <- Transaction.getObjectStore(championsStoreName)
-            _ <- heroes.put(value, Some(key))
-            illaoi <- heroes.get(key)
-          } yield illaoi == Some(value)
-        })
+      toFuture {
+        Database
+          .open[F](dbName, schema)
+          .rethrow
+          .flatMap(_.readWrite(NonEmptyList.of(championsStoreName)) {
+            for {
+              heroes <- Transaction.getObjectStore(championsStoreName)
+              _ <- heroes.put("Illaoi", Some(key))
+              illaoi <- heroes.get(key)
+              _ = {
+                println("+++++")
+                println(illaoi)
+              }
+            } yield assert(illaoi == Some("Illaoi"))
+          })
+      }
     }
   }
 }
+
+object FutureTests extends TestsUsingBackend[Future]([A] => (fa: Future[A]) => fa)
