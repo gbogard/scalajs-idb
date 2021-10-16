@@ -35,8 +35,8 @@ trait Database[F[_]]:
 
 object Database:
 
-  def open[F[_]: Backend](name: Name, schema: Schema): F[Either[Throwable, Database[F]]] =
-    internal.Backend.openDatabase(name, schema)
+  def open[F[_]: Backend](name: Name, schema: Schema): F[Database[F]] =
+    internal.Backend.openDatabase[F](name, schema)
 
   opaque type Name = String
   object Name:
