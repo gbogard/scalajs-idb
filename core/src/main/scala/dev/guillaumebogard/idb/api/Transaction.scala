@@ -18,24 +18,13 @@ package dev.guillaumebogard.idb.api
 
 import scala.scalajs.js
 import cats.free.Free
-
-trait ObjectStore:
-  protected val name: ObjectStore.Name
-
-  def get(key: Key): Transaction[Option[js.Object]] = Transaction.get(name, key)
-  def put(value: js.Any, key: Option[Key]) = Transaction.put(name, value, key)
-
-object ObjectStore:
-  opaque type Name = String
-  object Name:
-    def apply(name: String): Name = name
-
 type Transaction[T] = Free[TransactionA, T]
 
 enum TransactionA[T]:
   case GetObjectStore(name: ObjectStore.Name) extends TransactionA[ObjectStore]
-  case Put(store: ObjectStore.Name, value: js.Any, key: Key | Null) extends TransactionA[Unit]
-  case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Object]]
+  case Add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Unit]
+  case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Unit]
+  case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Any]]
 
 object Transaction:
   enum Mode:
@@ -54,7 +43,9 @@ object Transaction:
   def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
     Free.liftF(TransactionA.GetObjectStore(name))
 
-  def get(store: ObjectStore.Name, key: Key): Transaction[Option[js.Object]] =
+  def get(store: ObjectStore.Name, key: Key): Transaction[Option[js.Any]] =
     Free.liftF(TransactionA.Get(store, key))
   def put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) =
-    Free.liftF(TransactionA.Put(store, value, key.orNull))
+    Free.liftF(TransactionA.Put(store, value, key))
+  def add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) =
+    Free.liftF(TransactionA.Add(store, value, key))
