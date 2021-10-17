@@ -117,7 +117,8 @@ val database: Future[Database] =
 
 #### Cats Effect backend (as part of `scalajs-idb-cats-effect`)
 
-// TODO
+This library also provdes a backend for any type `F[_]` with an implicit `cats.effect.Async[F]`.
+This includes `cats.effect.IO`. All you have to do is import `dev.guillaumebogard.idb.cats.given`.
 
 ### Schema management
 
@@ -141,6 +142,7 @@ val database: Future[Database] =
     - [x] `put`
     - [x] `get`
     - [ ] `getAll`
+    - [ ] `openCursor`
 - [x] Future Backend
 - [x] Cats Effect IO Backend 
 - Database schema management

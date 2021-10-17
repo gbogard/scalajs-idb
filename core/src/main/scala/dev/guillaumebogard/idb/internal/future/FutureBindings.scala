@@ -77,13 +77,19 @@ extension (store: IDBObjectStore)(using ec: ExecutionContext)
       .flatMap(runRequest)
       .map(_.result.toOption)
 
-  def addFuture(value: js.Any, key: Option[api.Key]): Future[api.Key] =
+  private[internal] def getAllFuture(range: Option[api.KeyRange], count: Int): Future[Seq[js.Any]] =
+    Future
+      .fromTry(Try(store.getAll(range.orUndefined, count)))
+      .flatMap(runRequest)
+      .map(_.result.toSeq)
+
+  private[internal] def addFuture(value: js.Any, key: Option[api.Key]): Future[api.Key] =
     Future
       .fromTry(Try(store.add(value, key.orUndefined)))
       .flatMap(runRequest)
       .map(_.result)
 
-  def putFuture(value: js.Any, key: Option[api.Key]): Future[api.Key] =
+  private[internal] def putFuture(value: js.Any, key: Option[api.Key]): Future[api.Key] =
     Future
       .fromTry(Try(store.put(value, key.orUndefined)))
       .flatMap(runRequest)

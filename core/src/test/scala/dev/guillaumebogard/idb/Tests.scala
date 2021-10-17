@@ -38,7 +38,7 @@ val usersStore = ObjectStore.withInlineKeys[User]("users", KeyPath("id"))
 class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]) extends TestSuite {
   val tests = Tests {
     test("ChampionsStore (Out-of-line keys)") {
-      test("Simple put and get test") {
+      test("Simple put and get") {
         val dbName = Database.Name("champions-store-tests")
         val schema = Schema().createObjectStore(championsStore)
         val illaoi = Champion("Illaoi", "top")
@@ -60,11 +60,10 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
     test("User store (inline keys)") {
       val dbName = Database.Name("users-store-tests")
       val schema = Schema().createObjectStore(usersStore)
-      val johnDoe = User(1, "John Doe")
 
-      test("Simple put and get test") {
+      test("Simple put and get") {
+        val johnDoe = User(1, "John Doe")
         toFuture {
-          js.Dynamic.global.console.log(johnDoe.asInstanceOf[js.Any])
           Database
             .open[F](dbName, schema)
             .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
@@ -72,6 +71,25 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
                 insertedKey <- usersStore.put(johnDoe)
                 result <- usersStore.get(insertedKey)
               } yield assert(result === Some(johnDoe) && insertedKey == johnDoe.id.toKey)
+            })
+        }
+      }
+
+      test("Multiple puts and getAll") {
+        val users = List(
+          User(1, "Paul"),
+          User(2, "John"),
+          User(3, "George"),
+          User(4, "Ringo")
+        )
+        toFuture {
+          Database
+            .open[F](dbName, schema)
+            .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
+              for {
+                _ <- users.traverse_(usersStore.put)
+                results <- usersStore.getAll()
+              } yield assert(results.toList === users)
             })
         }
       }

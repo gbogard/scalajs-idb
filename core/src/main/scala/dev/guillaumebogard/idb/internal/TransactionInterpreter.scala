@@ -39,6 +39,8 @@ private class Transactor(idbTransaction: IDBTransaction)(using ec: ExecutionCont
   def apply[A](xa: api.TransactionA[A]): Future[A] = xa match {
     case api.TransactionA.Get(store, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.getFuture(key))
+    case api.TransactionA.GetAll(store, range, count) =>
+      idbTransaction.objectStoreFuture(store).flatMap(_.getAllFuture(range, count)).asInstanceOf[Future[A]]
     case api.TransactionA.Put(store, value, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.putFuture(value, key))
     case api.TransactionA.Add(store, value, key) =>

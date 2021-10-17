@@ -24,6 +24,8 @@ enum TransactionA[T]:
   case Add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
   case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Any]]
+  case GetAll(store: ObjectStore.Name, keyRange: Option[KeyRange], count: Int)
+      extends TransactionA[js.Array[js.Any]]
 
 object Transaction:
   enum Mode:
@@ -45,3 +47,5 @@ object Transaction:
     Free.liftF(TransactionA.Put(store, value, key))
   def add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) =
     Free.liftF(TransactionA.Add(store, value, key))
+  def getAll(store: ObjectStore.Name, range: Option[KeyRange] = None, count: Int = 0) =
+    Free.liftF(TransactionA.GetAll(store, range, count))

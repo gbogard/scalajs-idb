@@ -22,6 +22,7 @@ import dev.guillaumebogard.idb.internal.lowlevel.IDBObjectStore.CreateObjectStor
 trait ObjectStore[T]:
   val name: ObjectStore.Name
   def get(key: Key): Transaction[Option[T]]
+  def getAll(range: Option[KeyRange] = None, count: Int = 0): Transaction[Seq[T]]
 
 object ObjectStore:
   opaque type Name = String
@@ -56,6 +57,8 @@ trait ObjectStoreWithInlineKeys[T] extends ObjectStore[T]:
 
   def get(key: Key): Transaction[Option[T]] =
     Transaction.get(name, key).map(_.map(v => codec.decode(v.asInstanceOf[js.Object])))
+  def getAll(range: Option[KeyRange] = None, count: Int = 0): Transaction[Seq[T]] =
+    Transaction.getAll(name, range, count).map(_.map(v => codec.decode(v.asInstanceOf[js.Object])).toSeq)
   def put(value: T) = Transaction.put(name, codec.encode(value), None)
   def add(value: T) = Transaction.add(name, codec.encode(value), None)
 
@@ -67,6 +70,8 @@ trait ObjectStoreWithOutOfLineKeys[T] extends ObjectStore[T]:
 
   def get(key: Key): Transaction[Option[T]] =
     Transaction.get(name, key).map(_.map(codec.decode))
+  def getAll(range: Option[KeyRange] = None, count: Int = 0): Transaction[Seq[T]] =
+    Transaction.getAll(name, range, count).map(_.map(v => codec.decode(v.asInstanceOf[js.Object])).toSeq)
   def put(value: T, key: Key) = Transaction.put(name, codec.encode(value), Some(key))
   def add(value: T, key: Key) = Transaction.add(name, codec.encode(value), Some(key))
 
