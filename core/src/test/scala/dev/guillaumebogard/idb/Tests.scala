@@ -20,14 +20,13 @@ import utest._
 import scala.scalajs.js
 import dev.guillaumebogard.idb.api.*
 import scala.concurrent.{Future, ExecutionContext}
+import cats.Monad
 import cats.implicits.given
 import cats.data.NonEmptyList
 
 given ec: ExecutionContext = ExecutionContext.global
 
-class TestsUsingBackend[F[_]](toFuture: [A] => F[A] => Future[A])(using backend: Backend[F])
-    extends TestSuite {
-  import backend.given
+class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]) extends TestSuite {
 
   val tests = Tests {
     test("Simple put and get test") {
@@ -39,16 +38,11 @@ class TestsUsingBackend[F[_]](toFuture: [A] => F[A] => Future[A])(using backend:
       toFuture {
         Database
           .open[F](dbName, schema)
-          .rethrow
           .flatMap(_.readWrite(NonEmptyList.of(championsStoreName)) {
             for {
               heroes <- Transaction.getObjectStore(championsStoreName)
               _ <- heroes.put("Illaoi", Some(key))
               illaoi <- heroes.get(key)
-              _ = {
-                println("+++++")
-                println(illaoi)
-              }
             } yield assert(illaoi == Some("Illaoi"))
           })
       }
