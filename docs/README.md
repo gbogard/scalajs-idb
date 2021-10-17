@@ -57,7 +57,7 @@ val champions = ObjectStore[Champion]("champions")
 // created/deleted from your IndexedDB database
 val schema = Schema().createObjectStore(championsStore)
 
-// Transaction is a pure description of an IndexedDB program,
+// A Transaction is a pure description of an IndexedDB program,
 // nothing is executed at this point
 val transaction: Transaction[Boolean] = 
   for {
@@ -65,6 +65,8 @@ val transaction: Transaction[Boolean] =
     result <- heroes.get(key)
   } yield result === Some(illaoi)
 
+// Once the database is open,
+// `transact` can execute a Transaction[Boolean] and turn it into a Future[Boolean]
 val res: Future[Boolean] = 
   Database
     .open[Future](Database.Name("LoL"), schema)
@@ -95,7 +97,7 @@ val getBoth =
   } yield (user, pref)
 ```
 
-`Transaction[A]` is a [Monad](https://typelevel.org/cats/typeclasses/monad.html), meaning you can
+`Transaction[A]` is a [Monad](https://typelevel.org/cats/typeclasses/monad.html), meaning you can take
 advantage of existing combinators to build your programs such as `mapN`, `traverse`, etc.
 
 ### Backends
@@ -139,7 +141,7 @@ object stores and indices.
 
 In scalajs-idb, when you open a database, instead of providing a version number, you provide a `dev.guillaumebogard.idb.api.Schema`, which is
 an append-only list of schema operations that describe what your database should look like. Internally, scalajs-idb will increment the database's
-version number for every operation in the schema, and automatically execute operations that have not been yet executed on the user's device.
+version number for every operation in the schema, and automatically execute operations that have not yet been executed on the user's device.
 
 Here's an example:
 
@@ -155,8 +157,33 @@ When you ask scalajs-idb to open a database with this schema, it will internally
 IndexedDB database with version number 3, and handle the creation of your object stores in the `upgradeneeded`
 callback automatically. When the `Future` resolves, the obtained database already has the required stores.
 
-**There is one very important rule with schemas: never delete an operation or swap operations. If you need to delete an object store
+⚠️  **There is one very important rule with schemas: never delete an operation or swap operations. If you need to delete an object store
 for example, don't remove the `createOperationStore` operation from the schema; instead, append a `deleteObjectStore` operation.**
+
+### Codec / ObjectCodec 
+
+This library uses type classes to (de-)serialize Scala types into JS types that can be stored in an `ObjectStore`.
+Each `ObjectStore` is associated with a type of values, and this type is expected to have an instance of `Codec` or `ObjectCodec`
+depending on the store.
+
+For object stores with [*in-line keys*](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#in-line_key),
+the keys are part of the stored values themselves, which means stored values need to be represented as Javascript objects. Such
+a store requires an `ObjectCodec[T]`, wich describe a bidirectional transformation between `T` and `scalajs.js.Object`.
+
+```scala
+trait ObjectCodec[T]:
+def encode(value: T): js.Object
+def decode(value: js.Object): T
+```
+An instance of the type class is already provided for all subtypes of js.Object,
+so if your data type extends js.Object, you have nothing special to do.
+
+For object stores with [*out-of-line keys*](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#out-of-line_key),
+keys are provided at the time of insertion, separately from the stored values. In this case, you only need a `Codec[T]`, which describes
+a bidirectional transformation between `T` and `scala.js.Any` (which could be an object, but not necessarily).
+
+An instance of the type class is already provided for all subtypes of js.Any,
+so if your data type extends js.Any, you have nothing special to do.
 
 ## License and code of conduct
 
@@ -180,7 +207,7 @@ You are expected to follow the [Scala Code of Conduct](https://www.scala-lang.or
     - [x] `add`
     - [x] `put`
     - [x] `get`
-    - [ ] `getAll`
+    - [x] `getAll`
     - [ ] `openCursor`
 - [x] Future Backend
 - [x] Cats Effect IO Backend 
@@ -196,6 +223,6 @@ You are expected to follow the [Scala Code of Conduct](https://www.scala-lang.or
 - [x] Encoder / Decoder type class
 - [ ] Github actions
 - [ ] Add more examples
-- [ ] Document first version
+- [x] Document first version
 - [ ] Publish first version
 - [x] Add a license and a code of conduct

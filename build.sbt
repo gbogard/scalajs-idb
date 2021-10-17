@@ -1,7 +1,9 @@
 import org.scalajs.jsenv.selenium._
+import xerial.sbt.Sonatype._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import ReleaseTransformations._
 
-ThisBuild / version := "0.1.0"
+ThisBuild / version := "0.2.0-SNAPSHOT"
 ThisBuild / organization := "dev.guillaumebogard"
 ThisBuild / organizationName := "Guillaume Bogard"
 ThisBuild / startYear := Some(2021)
@@ -20,11 +22,32 @@ lazy val testSettings = Seq(
   )
 )
 
+lazy val publishSettings = Seq(
+  sonatypeCredentialHost := "s01.oss.sonatype.org",
+  versionScheme := Some("semver-spec"),
+  sonatypeProjectHosting := Some(GitHubHosting("gbogard", "scalajs-idb", "hey@guillaumebogard.dev")),
+  publishTo := sonatypePublishToBundle.value,
+  publishMavenStyle := true,
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    releaseStepCommandAndRemaining("publishSigned"),
+    releaseStepCommand("sonatypeBundleRelease"),
+    setNextVersion,
+    commitNextVersion,
+    pushChanges
+  )
+)
+
 lazy val root = project
   .in(file("."))
   .aggregate(core, catsEffect)
   .settings(
-    crossScalaVersions := Nil,
     publish / skip := true
   )
 
@@ -33,6 +56,7 @@ lazy val core = project
   .settings(
     name := "scalajs-idb-core",
     testSettings,
+    publishSettings,
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % "2.6.1",
       "org.typelevel" %%% "cats-free" % "2.6.1"
@@ -45,6 +69,7 @@ lazy val catsEffect = project
   .settings(
     name := "scalajs-idb-cats-effect",
     testSettings,
+    publishSettings,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.2.9"
   )
   .dependsOn(core % "compile->compile;test->test")
