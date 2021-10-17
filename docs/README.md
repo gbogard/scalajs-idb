@@ -5,10 +5,18 @@ scalajs-idb is a type-safe, idiomatic interface to
 and [Scala.js](https://www.scala-js.org/), with optional integration with
 [Cats Effect](https://typelevel.org/cats-effect/).
 
+This library aims at being less imperative than the original IndexedDB API: transactions and
+database schemas in scalajs-idb are managed declaratively through simple data structures.
+
 scalajs-idb provides a functional way to construct programs that rely on IndexedDB. Its
 transaction system lets you write IndexedDB programs as pure descriptions and interpret them using
 the "effect" of your choice, similarly to what [Doobie](https://tpolecat.github.io/doobie/) does 
 with JDBC programs.
+
+The schema system lets you manage object stores and indices without ever managing versions manually.
+
+**This is still an early-stage project: some features of IndexedDB are still not supported and
+breaking changes will be regularly introduced.**
 
 ## Installation
 
@@ -122,7 +130,38 @@ This includes `cats.effect.IO`. All you have to do is import `dev.guillaumebogar
 
 ### Schema management
 
-// TODO
+scalajs-idb lets you manage object stores and indices without manually managing database versions, using a declarative schema.
+
+In the Javascript API, IndexedDB requires you to provide a version number when you *open* a database. The version number you provide
+is checked against the last encountered version on the user's device to determine whether a schema upgrade is necessary. If the version you
+provide is greater than what is stored on the device, a `upgradeneeded` event is fired, giving you a unique opportunity to create or delete
+object stores and indices.
+
+In scalajs-idb, when you open a database, instead of providing a version number, you provide a `dev.guillaumebogard.idb.api.Schema`, which is
+an append-only list of schema operations that describe what your database should look like. Internally, scalajs-idb will increment the database's
+version number for every operation in the schema, and automatically execute operations that have not been yet executed on the user's device.
+
+Here's an example:
+
+```scala
+val schema = 
+  Schema()                                 // Empty schema  - v1
+    .createObjectStore(preferencesStores)  // Added a store - v2
+    .createObjectStore(usersStores)        // Added a store - v3
+
+Database.open[Future](Database.Name("my-db"), schema)
+```
+When you ask scalajs-idb to open a database with this schema, it will internally open an
+IndexedDB database with version number 3, and handle the creation of your object stores in the `upgradeneeded`
+callback automatically. When the `Future` resolves, the obtained database already has the required stores.
+
+**There is one very important rule with schemas: never delete an operation or swap operations. If you need to delete an object store
+for example, don't remove the `createOperationStore` operation from the schema; instead, append a `deleteObjectStore` operation.**
+
+## License and code of conduct
+
+This library is maintained by [@gbogard](https://github.com/gbogard) and licensed under the [Apache 2.0 License](../LICENSE). 
+You are expected to follow the [Scala Code of Conduct](https://www.scala-lang.org/conduct/) when discussing the library.
 
 ## To-do list:
 
@@ -156,6 +195,7 @@ This includes `cats.effect.IO`. All you have to do is import `dev.guillaumebogar
 - [x] Safe transactions using Free
 - [x] Encoder / Decoder type class
 - [ ] Github actions
+- [ ] Add more examples
 - [ ] Document first version
 - [ ] Publish first version
-- [ ] Add a license and a code of conduct
+- [x] Add a license and a code of conduct

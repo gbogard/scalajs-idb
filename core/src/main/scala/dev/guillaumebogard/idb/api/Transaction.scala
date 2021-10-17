@@ -25,7 +25,7 @@ enum TransactionA[T]:
   case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Any]]
   case GetAll(store: ObjectStore.Name, keyRange: Option[KeyRange], count: Int)
-      extends TransactionA[js.Array[js.Any]]
+      extends TransactionA[Seq[js.Any]]
 
 object Transaction:
   enum Mode:

@@ -23,6 +23,8 @@ trait ObjectStore[T]:
   val name: ObjectStore.Name
   def get(key: Key): Transaction[Option[T]]
   def getAll(range: Option[KeyRange] = None, count: Int = 0): Transaction[Seq[T]]
+  def getAll(range: KeyRange): Transaction[Seq[T]] = getAll(Some(range))
+  def getAll(lowerBound: Key, upperBound: Key): Transaction[Seq[T]] = getAll(KeyRange.bound(lowerBound, upperBound))
 
 object ObjectStore:
   opaque type Name = String
@@ -71,7 +73,7 @@ trait ObjectStoreWithOutOfLineKeys[T] extends ObjectStore[T]:
   def get(key: Key): Transaction[Option[T]] =
     Transaction.get(name, key).map(_.map(codec.decode))
   def getAll(range: Option[KeyRange] = None, count: Int = 0): Transaction[Seq[T]] =
-    Transaction.getAll(name, range, count).map(_.map(v => codec.decode(v.asInstanceOf[js.Object])).toSeq)
+    Transaction.getAll(name, range, count).map(_.map(v => codec.decode(v.asInstanceOf[js.Any])).toSeq)
   def put(value: T, key: Key) = Transaction.put(name, codec.encode(value), Some(key))
   def add(value: T, key: Key) = Transaction.add(name, codec.encode(value), Some(key))
 

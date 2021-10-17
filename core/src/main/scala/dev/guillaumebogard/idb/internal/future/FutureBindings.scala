@@ -79,7 +79,7 @@ extension (store: IDBObjectStore)(using ec: ExecutionContext)
 
   private[internal] def getAllFuture(range: Option[api.KeyRange], count: Int): Future[Seq[js.Any]] =
     Future
-      .fromTry(Try(store.getAll(range.orUndefined, count)))
+      .fromTry(Try(store.getAll(range.orNull, count)))
       .flatMap(runRequest)
       .map(_.result.toSeq)
 

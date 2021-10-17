@@ -88,8 +88,9 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
             .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
               for {
                 _ <- users.traverse_(usersStore.put)
-                results <- usersStore.getAll()
-              } yield assert(results.toList === users)
+                completeDataset <- usersStore.getAll()
+                partialDataset <- usersStore.getAll(KeyRange.bound(2.toKey, 3.toKey))
+              } yield assert(completeDataset.toList === users && partialDataset === users.drop(1).take(2))
             })
         }
       }

@@ -11,6 +11,6 @@ object KeyRange:
     lowlevel.idbKeyRange.lowerBound(lowerBound, lowerOpen)
   def upperBound(upperBound: Key, upperOpen: Boolean = false): KeyRange =
     lowlevel.idbKeyRange.upperBound(upperBound, upperOpen)
-  def bound(lowerBound: Key, upperBound: Key, lowerOpen: Boolean = false, upperOpen: false): KeyRange =
+  def bound(lowerBound: Key, upperBound: Key, lowerOpen: Boolean = false, upperOpen: Boolean = false): KeyRange =
     lowlevel.idbKeyRange.bound(lowerBound, upperBound, lowerOpen, upperOpen)
   def only(key: Key): KeyRange = lowlevel.idbKeyRange.only(key)
