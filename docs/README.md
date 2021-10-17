@@ -34,26 +34,35 @@ import scalajs.js
 
 given ec: ExecutionContext = ExecutionContext.global
 
-val championsStoreName = ObjectStore.Name("champions")
+// Define your data
+class Champion(val name: String, val position: String) extends js.Object
+given Eq[Champion] = Eq.by(c => c.name.hashCode * c.position.hashCode)
+
+val illaoi = Champion("Illaoi", "top")
+
+// Define a store for your data type
+// In this case, we're using "out-of line keys", 
+// meaning we'll have to provide them explicitly
+val champions = ObjectStore[Champion]("champions")
 
 // A Schema describes what object stores and indicies should be
 // created/deleted from your IndexedDB database
-val schema = Schema().createObjectStore(championsStoreName)
+val schema = Schema().createObjectStore(championsStore)
 
 // Transaction is a pure description of an IndexedDB program,
 // nothing is executed at this point
 val transaction: Transaction[Boolean] = 
   for {
-    heroes <- Transaction.getObjectStore(championsStoreName)
-    _ <- heroes.put("Illaoi": js.Any, Some(Key("favChampion")))
-    illaoi <- heroes.get(Key("favChampion"))
-  } yield illaoi == Some("Illaoi")
+    key <- champions.put(illaoi, "favChampion".toKey)
+    result <- heroes.get(key)
+  } yield result === Some(illaoi)
 
 val res: Future[Boolean] = 
   Database
     .open[Future](Database.Name("LoL"), schema)
     .rethrow
-    .flatMap(_.readWrite(NonEmptyList.of(championsStoreName))(transaction))
+    // Run a read-write transaction against our champions store
+    .flatMap(_.readWrite(NonEmptyList.of(champions.name))(transaction))
 ```
 
 ### Transactions
@@ -65,17 +74,11 @@ a sequence of instructions that can be interpreted by a [backend](#Backends).
 Programs can be sequenced to build larger programs:
 
 ```scala
-val getUser =
-  for {
-    store <- Transaction.getObjectStore(ObjectStore.Name("users"))
-    user  <- store.get(Key("john-doe"))
-  } yield user
+val users = ObjectStore[User]("users")
+val userPreferences = ObjectStore[Preference]("config")
 
-val getPreferences =
-  for {
-    store <- Transaction.getObjectStore(ObjectStore.Name("config"))
-    pref  <- store.get(Key("userPreferences"))
-  } yield pref
+val getUser = users.get("john-doe".toKey)
+val getPreferences = config.userPreferences.get("john-doe".toKey)
 
 val getBoth =
   for {
@@ -93,7 +96,7 @@ A `dev.guillaumebogard.api.Backend[F[_]]` allows you to interpret IndexedDB prog
 within an effect `F[_]`. If you have an implicit `Backend[F]` in scope, then you can:
 
 - Use `dev.guillaumebogard.api.Database.open[F]` to open a database. The method returns
-a `F[Either[Throwable, Database]]`
+a `F[Database]`
 - Use `Database#readOnly`, `Database#readWrite` or `Database.transact` to turn a `Transaction[A]`
 into a `F[A]`
 
@@ -134,20 +137,22 @@ val database: Future[Database] =
     - [x] `add`
 - High-level bindings:
   - `ObjectStore`:
-    - [ ] `add`
+    - [x] `add`
     - [x] `put`
     - [x] `get`
+    - [ ] `getAll`
 - [x] Future Backend
-- [ ] Cats Effect IO Backend 
+- [x] Cats Effect IO Backend 
 - Database schema management
   - [x] Declarative schema management
   - [x] Create object store
+  - [x] Create object store with options
   - [ ] Delete object store
   - [ ] Create index
   - [ ] Delete index
 
 - [x] Safe transactions using Free
-- [ ] Get / Put type class
+- [x] Encoder / Decoder type class
 - [ ] Github actions
 - [ ] Document first version
 - [ ] Publish first version

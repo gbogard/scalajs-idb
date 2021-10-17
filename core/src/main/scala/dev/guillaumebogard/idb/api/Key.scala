@@ -16,9 +16,11 @@
 
 package dev.guillaumebogard.idb.api
 
-opaque type Key = String
+import scalajs.js
 
-extension (key: Key) def toString: String = key
+opaque type Key = js.Any
+
+extension (jsValue: js.Any) def toKey: Key = jsValue
 
 object Key:
-  def apply(key: String): Key = key
+  def apply(key: js.Any): Key = key

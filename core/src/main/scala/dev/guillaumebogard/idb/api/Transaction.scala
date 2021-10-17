@@ -21,9 +21,8 @@ import cats.free.Free
 type Transaction[T] = Free[TransactionA, T]
 
 enum TransactionA[T]:
-  case GetObjectStore(name: ObjectStore.Name) extends TransactionA[ObjectStore]
-  case Add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Unit]
-  case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Unit]
+  case Add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
+  case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Any]]
 
 object Transaction:
@@ -39,9 +38,6 @@ object Transaction:
           case ReadWrite      => "readwrite"
           case ReadWriteFlush => "readwriteflush"
     given Conversion[Mode, JS] = toJS(_)
-
-  def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
-    Free.liftF(TransactionA.GetObjectStore(name))
 
   def get(store: ObjectStore.Name, key: Key): Transaction[Option[js.Any]] =
     Free.liftF(TransactionA.Get(store, key))

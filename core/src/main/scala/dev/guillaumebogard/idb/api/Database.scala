@@ -30,9 +30,6 @@ trait Database[F[_]]:
   def readWrite[T](stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T] =
     transact(Transaction.Mode.ReadWrite, stores)(transaction)
 
-  def getObjectStore(name: ObjectStore.Name): Transaction[ObjectStore] =
-    Transaction.getObjectStore(name)
-
 object Database:
 
   def open[F[_]: Backend](name: Name, schema: Schema): F[Database[F]] =

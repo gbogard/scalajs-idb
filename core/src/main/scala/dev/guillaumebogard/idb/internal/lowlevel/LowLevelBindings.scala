@@ -12,9 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * This module contains the low-level, impure, imperative interface to IndexedDB,
- * as described [here](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API).
  */
 
 package dev.guillaumebogard.idb.internal.lowlevel
@@ -88,11 +85,11 @@ private[internal] trait AddRequest extends IDBRequest[AddRequest, Key]
 @js.native
 private[internal] trait IDBObjectStore extends js.Object {
   def get(key: Key): IDBRequest[Unit, js.UndefOr[js.Any]] = js.native
-  def add[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
-  def put[Value <: js.Any](value: Value, key: Key | Null): AddRequest = js.native
+  def add[Value <: js.Any](value: Value, key: js.UndefOr[Key]): AddRequest = js.native
+  def put[Value <: js.Any](value: Value, key: js.UndefOr[Key]): AddRequest = js.native
 }
 
-private[internal] object IDBObjectStore:
+object IDBObjectStore:
   @JSExportAll
   case class CreateObjectStoreOptions(
       keyPath: KeyPath.JS,

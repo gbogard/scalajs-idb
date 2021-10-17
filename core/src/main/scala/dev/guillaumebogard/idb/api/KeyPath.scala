@@ -24,17 +24,27 @@ enum KeyPath:
   case Identifier(id: String)
   case Path(ids: Seq[Identifier])
 
-object KeyPath:
-  opaque type JS = js.Array[String] | Null
+extension (path: KeyPath)
+  def add(identifier: String): KeyPath =
+    path match
+      case KeyPath.Empty             => KeyPath.Identifier(identifier)
+      case other: KeyPath.Identifier => KeyPath.Path(Seq(other, KeyPath.Identifier(identifier)))
+      case KeyPath.Path(others)      => KeyPath.Path(others :+ KeyPath.Identifier(identifier))
+  def /(identifier: String): KeyPath = add(identifier)
 
+object KeyPath:
+  opaque type JS = String | Null
   given Conversion[KeyPath, JS] = toJS(_)
 
+  def apply(): KeyPath = KeyPath.Empty
+  def apply(identifier: String): KeyPath = KeyPath.Identifier(identifier)
+
   def fromJS(input: JS): KeyPath = input match
-    case arr: js.Array[String] => Path(arr.map(Identifier(_): Identifier).toSeq)
-    case null => Empty
+    case str: String => Path(str.split(".").nn.map(str => Identifier(str.nn): Identifier).toSeq)
+    case null        => Empty
 
   extension (keyPath: KeyPath)
     def toJS: KeyPath.JS = keyPath match
-      case Empty => null
-      case Identifier(id) => js.Array(id)
-      case Path(ids) => ids.toJSArray.map(_.id)
+      case Empty          => null
+      case Identifier(id) => id
+      case Path(ids)      => ids.mkString(".")
