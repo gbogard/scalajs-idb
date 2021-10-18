@@ -1,5 +1,9 @@
 # scalajs-idb, a statically-typed, idiomatic interface to IndexedDB
 
+![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/dev.guillaumebogard/scalajs-idb-core_sjs1_3?color=brightgreen&label=version&server=https%3A%2F%2Fs01.oss.sonatype.org)
+![License Apache 2.0](https://img.shields.io/badge/license-Apache.2.0-blue)
+![Cats Friendly](https://img.shields.io/badge/-Cats%20Friendly-red)
+
 scalajs-idb is a type-safe, idiomatic interface to 
 [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) for Scala 3
 and [Scala.js](https://www.scala-js.org/), with optional integration with
@@ -224,5 +228,5 @@ You are expected to follow the [Scala Code of Conduct](https://www.scala-lang.or
 - [ ] Github actions
 - [ ] Add more examples
 - [x] Document first version
-- [ ] Publish first version
+- [x] Publish first version
 - [x] Add a license and a code of conduct
