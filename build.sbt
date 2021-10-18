@@ -7,6 +7,19 @@ ThisBuild / organization := "dev.guillaumebogard"
 ThisBuild / organizationName := "Guillaume Bogard"
 ThisBuild / startYear := Some(2021)
 ThisBuild / licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / homepage := Some(url("https://(your project url)"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/gbogard/scalajs-idb"),
+    "scm:git@github.com:gbogard/scalajs-idb.git"
+  )
+)
+ThisBuild / developers += Developer(
+  "gbogard",
+  "Guillaume Bogard",
+  "hey@guillaumebogard.dev",
+  url("https://guillaumebogard.dev")
+)
 ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / scalacOptions ++= Seq("-Yexplicit-nulls")
 
@@ -24,7 +37,6 @@ lazy val testSettings = Seq(
 lazy val publishSettings = Seq(
   sonatypeCredentialHost := "s01.oss.sonatype.org",
   versionScheme := Some("semver-spec"),
-  sonatypeProjectHosting := Some(GitHubHosting("gbogard", "scalajs-idb", "hey@guillaumebogard.dev")),
   publishTo := sonatypePublishToBundle.value,
   publishMavenStyle := true,
   releaseProcess := Seq[ReleaseStep](
@@ -55,7 +67,6 @@ lazy val core = project
   .settings(
     name := "scalajs-idb-core",
     testSettings,
-    publishSettings,
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % "2.6.1",
       "org.typelevel" %%% "cats-free" % "2.6.1"
@@ -71,5 +82,5 @@ lazy val catsEffect = project
     publishSettings,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.2.9"
   )
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(core % "provided;compile->compile;test->test")
   .enablePlugins(ScalaJSPlugin)
