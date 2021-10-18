@@ -3,7 +3,6 @@ import xerial.sbt.Sonatype._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import ReleaseTransformations._
 
-ThisBuild / version := "0.2.0-SNAPSHOT"
 ThisBuild / organization := "dev.guillaumebogard"
 ThisBuild / organizationName := "Guillaume Bogard"
 ThisBuild / startYear := Some(2021)
