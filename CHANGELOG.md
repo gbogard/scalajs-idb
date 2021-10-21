@@ -13,6 +13,8 @@ to be manually declared.
 ### Added
 
 - Added instances of Encoder and Decoder for String, Boolean, numeric types and some collections
+- Instances of Encoder and Decoder are provided for Option
+- Instances of ObjectEncoder and Decoder can be derived automatically
 - Encoder and ObjectEncoder are contravariant functors (they have a cats.Contravariant instance)
 - Decoder is a functor (it has a cats.Functor instance)
 - Added two new type classes: ObjectKeyEncoder and ObjectKeyDecoder

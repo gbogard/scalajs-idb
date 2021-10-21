@@ -16,14 +16,15 @@
 
 package dev.guillaumebogard.idb.api
 
-import scalajs.js
-import scala.collection.mutable
 import cats.*
 import cats.implicits.given
-import js.JSConverters.*
-import scala.util.*
+import dev.guillaumebogard.idb.internal.*
+import scala.collection.mutable
 import scala.compiletime.*
 import scala.deriving.Mirror
+import scala.util.*
+import scalajs.js
+import js.JSConverters.*
 
 /** A type class describing the ability to turn Scala types into Javascript types, so they can stored in an
   * object store.
@@ -50,6 +51,10 @@ object Encoder:
 
   given [T, S <: Seq[T]](using encoder: Encoder[T]): Encoder[S] = _.map(encoder.encode).toJSArray
 
+  given [T](using encoder: Encoder[T]): Encoder[Option[T]] =
+    case None    => null.asInstanceOf[js.Any]
+    case Some(v) => encoder.encode(v)
+
   given Contravariant[Encoder] with
     def contramap[A, B](fa: Encoder[A])(f: B => A): Encoder[B] = (value: B) => fa.encode(f(value))
 
@@ -59,7 +64,7 @@ object Encoder:
 trait Decoder[T]:
   def decode(value: js.Any): T
 
-object Decoder:
+object Decoder extends DecoderDerivation:
   def apply[T](using decoder: Decoder[T]): Decoder[T] = decoder
   def from[T](fromJS: js.Any => T): Decoder[T] = value => fromJS(value)
   private def cast[T]: Decoder[T] = from[T](_.asInstanceOf[T])
@@ -75,6 +80,9 @@ object Decoder:
     */
   given [T <: js.Any]: Decoder[T] = cast[T]
 
+  given [T](using decoder: Decoder[T]): Decoder[Option[T]] =
+    value => Option(value).map(decoder.decode)
+
   given [T](using decoder: Decoder[T]): Decoder[Seq[T]] =
     Decoder[js.Array[js.Any]].map(_.map(decoder.decode).toSeq)
 
@@ -89,7 +97,6 @@ object Decoder:
   given Functor[Decoder] with
     def map[A, B](fa: Decoder[A])(f: A => B): Decoder[B] = (jsValue: js.Any) => f(fa.decode(jsValue))
 
-
 /** A type class describing the ability to turn Scala types into Javascript Objects. Similar to [[Encoder]],
   * except the Scala values are translated specifically to objects, not just any Javascript type. This
   * provides additional guarantees for object stores with in-line keys.
@@ -98,7 +105,7 @@ trait ObjectEncoder[T] extends Encoder[T]:
   def encode(value: T): js.Any = toObject(value)
   def toObject(value: T): js.Object
 
-object ObjectEncoder:
+object ObjectEncoder extends EncoderDerivation:
   def apply[T](using encoder: ObjectEncoder[T]): ObjectEncoder[T] = encoder
   def from[T](toJS: T => js.Object): ObjectEncoder[T] = value => toJS(value)
 

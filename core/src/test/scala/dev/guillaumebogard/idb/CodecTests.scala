@@ -24,21 +24,21 @@ import utest._
 
 object CodecTests extends TestSuite {
 
-  case class User(id: Int, name: String, metadata: Map[String, String] = Map.empty) derives Encoder, Decoder
-  case class TodoListItem(text: String, isDone: Boolean) derives Encoder, Decoder
-  case class TodoList(title: String, items: List[TodoListItem]) derives Encoder, Decoder
+  case class User(id: Int, name: String, metadata: Map[String, String] = Map.empty) derives ObjectEncoder, Decoder
+  case class TodoListItem(text: String, isDone: Boolean) derives ObjectEncoder, Decoder
+  case class TodoList(title: String, items: List[TodoListItem]) derives ObjectEncoder, Decoder
 
-  enum UserWithRole derives Encoder, Decoder:
+  enum UserWithRole derives ObjectEncoder, Decoder:
     case Admin(user: User)
     case Editor(user: User)
     case Nested(users: List[UserWithRole])
 
-  enum Color(val value: String) derives Encoder, Decoder:
+  enum Color(val value: String) derives ObjectEncoder, Decoder:
     case Red extends Color("red")
     case Blue extends Color("blue")
     case CustomColor(override val value: String) extends Color(value)
 
-  enum MyBool derives Encoder, Decoder:
+  enum MyBool derives ObjectEncoder, Decoder:
     case True
     case False
 
@@ -70,8 +70,8 @@ object CodecTests extends TestSuite {
         )
       )
       val colors = List(Color.Red, Color.CustomColor("teal"), Color.Blue)
-      // doTest(users)
-      // doTest(colors)
+      doTest(users)
+      doTest(colors)
       doTest(MyBool.True, compareMyBool)
       doTest(MyBool.False, compareMyBool)
     }
