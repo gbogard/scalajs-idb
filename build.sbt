@@ -57,7 +57,7 @@ lazy val publishSettings = Seq(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, catsEffect)
+  .aggregate(core, catsEffect, scalaJavaTime)
   .settings(
     publish / skip := true
   )
@@ -81,6 +81,17 @@ lazy val catsEffect = project
     testSettings,
     publishSettings,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.2.9"
+  )
+  .dependsOn(core % "provided;compile->compile;test->test")
+  .enablePlugins(ScalaJSPlugin)
+
+lazy val scalaJavaTime = project
+  .in(file("java-time"))
+  .settings(
+    name := "scalajs-idb-java-time",
+    testSettings,
+    publishSettings,
+    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
   )
   .dependsOn(core % "provided;compile->compile;test->test")
   .enablePlugins(ScalaJSPlugin)
