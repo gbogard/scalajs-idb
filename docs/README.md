@@ -47,8 +47,7 @@ import scalajs.js
 given ec: ExecutionContext = ExecutionContext.global
 
 // Define your data
-class Champion(val name: String, val position: String) extends js.Object
-given Eq[Champion] = Eq.by(c => c.name.hashCode * c.position.hashCode)
+case class Champion(val name: String, val position: String) derives ObjectEncoder, Decoder
 
 val illaoi = Champion("Illaoi", "top")
 
@@ -67,7 +66,7 @@ val transaction: Transaction[Boolean] =
   for {
     key <- champions.put(illaoi, "favChampion".toKey)
     result <- heroes.get(key)
-  } yield result === Some(illaoi)
+  } yield result == Some(illaoi)
 
 // Once the database is open,
 // `transact` can execute a Transaction[Boolean] and turn it into a Future[Boolean]
@@ -164,30 +163,13 @@ callback automatically. When the `Future` resolves, the obtained database alread
 ⚠️  **There is one very important rule with schemas: never delete an operation or swap operations. If you need to delete an object store
 for example, don't remove the `createOperationStore` operation from the schema; instead, append a `deleteObjectStore` operation.**
 
-### Codec / ObjectCodec 
+### Encoders and Decoders
 
 This library uses type classes to (de-)serialize Scala types into JS types that can be stored in an `ObjectStore`.
-Each `ObjectStore` is associated with a type of values, and this type is expected to have an instance of `Codec` or `ObjectCodec`
-depending on the store.
+Each `ObjectStore` is associated with a type of values, and certain operations require you to an instance 
+of `Encoder`, `ObjectEncoder` or `Decoder` for that type, depending on the operation.
 
-For object stores with [*in-line keys*](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#in-line_key),
-the keys are part of the stored values themselves, which means stored values need to be represented as Javascript objects. Such
-a store requires an `ObjectCodec[T]`, wich describe a bidirectional transformation between `T` and `scalajs.js.Object`.
-
-```scala
-trait ObjectCodec[T]:
-def encode(value: T): js.Object
-def decode(value: js.Object): T
-```
-An instance of the type class is already provided for all subtypes of js.Object,
-so if your data type extends js.Object, you have nothing special to do.
-
-For object stores with [*out-of-line keys*](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#out-of-line_key),
-keys are provided at the time of insertion, separately from the stored values. In this case, you only need a `Codec[T]`, which describes
-a bidirectional transformation between `T` and `scala.js.Any` (which could be an object, but not necessarily).
-
-An instance of the type class is already provided for all subtypes of js.Any,
-so if your data type extends js.Any, you have nothing special to do.
+// TODO: Improve doc
 
 ## License and code of conduct
 
