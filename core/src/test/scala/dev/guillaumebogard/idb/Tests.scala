@@ -28,11 +28,12 @@ import utest._
 given ec: ExecutionContext = ExecutionContext.global
 
 class Champion(val name: String, val position: String) extends js.Object
+
 given Eq[Champion] = Eq.by(c => c.name.hashCode * c.position.hashCode)
+
 val championsStore = ObjectStore[Champion]("champions")
 
-class User(val id: Int, val name: String) extends js.Object
-given Eq[User] = Eq.by(u => u.id.hashCode * u.name.hashCode)
+case class User(id: Int, name: String) derives ObjectEncoder, Decoder
 val usersStore = ObjectStore.withInlineKeys[User]("users", KeyPath("id"))
 
 class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]) extends TestSuite {
@@ -70,7 +71,7 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
               for {
                 insertedKey <- usersStore.put(johnDoe)
                 result <- usersStore.get(insertedKey)
-              } yield assert(result === Some(johnDoe) && insertedKey == johnDoe.id.toKey)
+              } yield assert(result == Some(johnDoe) && insertedKey == johnDoe.id.toKey)
             })
         }
       }
@@ -90,7 +91,7 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
                 _ <- users.traverse_(usersStore.put)
                 completeDataset <- usersStore.getAll()
                 partialDataset <- usersStore.getAll(KeyRange.bound(2.toKey, 3.toKey))
-              } yield assert(completeDataset.toList === users && partialDataset === users.drop(1).take(2))
+              } yield assert(completeDataset.toList == users && partialDataset == users.drop(1).take(2))
             })
         }
       }

@@ -29,8 +29,8 @@ lazy val testSettings = Seq(
   ),
   testFrameworks += new TestFramework("utest.runner.Framework"),
   Test / jsEnv := new SeleniumJSEnv(
-    new org.openqa.selenium.firefox.FirefoxOptions().setHeadless(true),
-    SeleniumJSEnv.Config().withKeepAlive(false)
+    new org.openqa.selenium.firefox.FirefoxOptions().setHeadless(false),
+    SeleniumJSEnv.Config().withKeepAlive(true)
   )
 )
 
