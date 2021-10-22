@@ -55,6 +55,8 @@ object Encoder:
     case None    => null.asInstanceOf[js.Any]
     case Some(v) => encoder.encode(v)
 
+  given [K: ObjectKeyEncoder, V: Encoder]: ObjectEncoder[Map[K, V]] = ObjectEncoder.apply
+
   given Contravariant[Encoder] with
     def contramap[A, B](fa: Encoder[A])(f: B => A): Encoder[B] = (value: B) => fa.encode(f(value))
 
@@ -116,6 +118,7 @@ object ObjectEncoder extends EncoderDerivation:
   given [K, V](using keyEncoder: ObjectKeyEncoder[K], encoder: Encoder[V]): ObjectEncoder[Map[K, V]] with
     def toObject(map: Map[K, V]) =
       map.map((k, v) => (keyEncoder.toKey(k), encoder.encode(v))).toJSDictionary.asInstanceOf[js.Object]
+
   given Contravariant[ObjectEncoder] with
     def contramap[A, B](fa: ObjectEncoder[A])(f: B => A): ObjectEncoder[B] = (value: B) =>
       fa.toObject(f(value))
