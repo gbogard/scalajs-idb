@@ -1,6 +1,7 @@
 # scalajs-idb, a statically-typed, idiomatic interface to IndexedDB
 
 ![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/dev.guillaumebogard/scalajs-idb-core_sjs1_3?color=brightgreen&label=version&server=https%3A%2F%2Fs01.oss.sonatype.org)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.guillaumebogard/scalajs-idb-core_sjs1_3?label=latest%20snapshot&server=https%3A%2F%2Fs01.oss.sonatype.org)
 ![License Apache 2.0](https://img.shields.io/badge/license-Apache.2.0-blue)
 ![Cats Friendly](https://img.shields.io/badge/-Cats%20Friendly-red)
 

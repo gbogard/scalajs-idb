@@ -67,6 +67,7 @@ lazy val core = project
   .settings(
     name := "scalajs-idb-core",
     testSettings,
+    publishSettings,
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % "2.6.1",
       "org.typelevel" %%% "cats-free" % "2.6.1"

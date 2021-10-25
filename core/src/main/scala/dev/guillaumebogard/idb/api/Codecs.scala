@@ -38,22 +38,23 @@ object Encoder:
 
   private def cast[T]: Encoder[T] = from[T](_.asInstanceOf[js.Any])
 
-  given Encoder[String] = cast[String]
-  given Encoder[Int] = cast[Int]
-  given Encoder[Long] = cast[Long]
-  given Encoder[Float] = cast[Float]
-  given Encoder[Double] = cast[Double]
-  given Encoder[Boolean] = cast[Boolean]
+  given string: Encoder[String] = cast[String]
+  given int: Encoder[Int] = cast[Int]
+  given float: Encoder[Float] = cast[Float]
+  given double: Encoder[Double] = cast[Double]
+  given boolean: Encoder[Boolean] = cast[Boolean]
 
   /** An instance of [[Encoder]] provided for all subtypes of [[js.Any]]
     */
-  given [T <: js.Any]: Encoder[T] = cast[T]
+  given jsAny[T <: js.Any]: Encoder[T] = cast[T]
 
-  given [T, S <: Seq[T]](using encoder: Encoder[T]): Encoder[S] = _.map(encoder.encode).toJSArray
+  given seq[T, S <: Seq[T]](using encoder: Encoder[T]): Encoder[S] = _.map(encoder.encode).toJSArray
 
-  given [T](using encoder: Encoder[T]): Encoder[Option[T]] =
+  given option[T](using encoder: Encoder[T]): Encoder[Option[T]] =
     case None    => null.asInstanceOf[js.Any]
     case Some(v) => encoder.encode(v)
+
+  given map[K: ObjectKeyEncoder, V: Encoder]: ObjectEncoder[Map[K, V]] = ObjectEncoder.map
 
   given Contravariant[Encoder] with
     def contramap[A, B](fa: Encoder[A])(f: B => A): Encoder[B] = (value: B) => fa.encode(f(value))
@@ -69,29 +70,29 @@ object Decoder extends DecoderDerivation:
   def from[T](fromJS: js.Any => T): Decoder[T] = value => fromJS(value)
   private def cast[T]: Decoder[T] = from[T](_.asInstanceOf[T])
 
-  given Decoder[String] = cast[String]
-  given Decoder[Int] = cast[Int]
-  given Decoder[Long] = cast[Long]
-  given Decoder[Float] = cast[Float]
-  given Decoder[Double] = cast[Double]
-  given Decoder[Boolean] = cast[Boolean]
+  given string: Decoder[String] = cast[String]
+  given int: Decoder[Int] = cast[Int]
+  given long: Decoder[Long] = cast[Long]
+  given float: Decoder[Float] = cast[Float]
+  given double: Decoder[Double] = cast[Double]
+  given boolean: Decoder[Boolean] = cast[Boolean]
 
   /** An instance of [[Decoder]] provided for all subtypes of [[js.Any]]
     */
-  given [T <: js.Any]: Decoder[T] = cast[T]
+  given jsAny[T <: js.Any]: Decoder[T] = cast[T]
 
-  given [T](using decoder: Decoder[T]): Decoder[Option[T]] =
+  given option[T](using decoder: Decoder[T]): Decoder[Option[T]] =
     value => Option(value).map(decoder.decode)
 
-  given [T](using decoder: Decoder[T]): Decoder[Seq[T]] =
+  given seq[T](using decoder: Decoder[T]): Decoder[Seq[T]] =
     Decoder[js.Array[js.Any]].map(_.map(decoder.decode).toSeq)
 
-  given [T](using decoder: Decoder[T]): Decoder[List[T]] = Decoder[Seq[T]].map(_.toList)
+  given list[T](using decoder: Decoder[T]): Decoder[List[T]] = seq.map(_.toList)
 
-  given [T](using decoder: Decoder[T]): Decoder[Vector[T]] = Decoder[Seq[T]].map(_.toVector)
+  given vector[T](using decoder: Decoder[T]): Decoder[Vector[T]] = seq.map(_.toVector)
 
-  given [K, V](using keyDecoder: ObjectKeyDecoder[K], decoder: Decoder[V]): Decoder[Map[K, V]] =
-    Decoder[js.Dictionary[js.Any]]
+  given map[K, V](using keyDecoder: ObjectKeyDecoder[K], decoder: Decoder[V]): Decoder[Map[K, V]] =
+    Decoder.jsAny[js.Dictionary[js.Any]]
       .map(_.toMap.map((k: String, v: js.Any) => (keyDecoder.fromString(k), decoder.decode(v))))
 
   given Functor[Decoder] with
@@ -113,9 +114,10 @@ object ObjectEncoder extends EncoderDerivation:
     */
   def castToObject[T <: js.Object]: ObjectEncoder[T] = v => v.asInstanceOf[js.Object]
 
-  given [K, V](using keyEncoder: ObjectKeyEncoder[K], encoder: Encoder[V]): ObjectEncoder[Map[K, V]] with
+  given map[K, V](using keyEncoder: ObjectKeyEncoder[K], encoder: Encoder[V]): ObjectEncoder[Map[K, V]] with
     def toObject(map: Map[K, V]) =
       map.map((k, v) => (keyEncoder.toKey(k), encoder.encode(v))).toJSDictionary.asInstanceOf[js.Object]
+
   given Contravariant[ObjectEncoder] with
     def contramap[A, B](fa: ObjectEncoder[A])(f: B => A): ObjectEncoder[B] = (value: B) =>
       fa.toObject(f(value))
@@ -127,12 +129,12 @@ object ObjectKeyEncoder:
   def apply[T](using ke: ObjectKeyEncoder[T]): ObjectKeyEncoder[T] = ke
   def from[T](toKey: T => String): ObjectKeyEncoder[T] = value => toKey(value)
 
-  given ObjectKeyEncoder[String] with
+  given string: ObjectKeyEncoder[String] with
     def toKey(str: String): String = str
 
-  given ObjectKeyEncoder[Int] = ObjectKeyEncoder[String].contramap(_.toString)
-  given ObjectKeyEncoder[Float] = ObjectKeyEncoder[String].contramap(_.toString)
-  given ObjectKeyEncoder[Double] = ObjectKeyEncoder[String].contramap(_.toString)
+  given int: ObjectKeyEncoder[Int] = string.contramap(_.toString)
+  given float: ObjectKeyEncoder[Float] = string.contramap(_.toString)
+  given double: ObjectKeyEncoder[Double] = string.contramap(_.toString)
 
   given Contravariant[ObjectKeyEncoder] with
     def contramap[A, B](fa: ObjectKeyEncoder[A])(f: B => A): ObjectKeyEncoder[B] =
@@ -145,11 +147,12 @@ object ObjectKeyDecoder:
   def apply[T](using kd: ObjectKeyDecoder[T]): ObjectKeyDecoder[T] = kd
   def from[T](fromString: String => T): ObjectKeyDecoder[T] = key => fromString(key)
 
-  given ObjectKeyDecoder[String] with
+  given string: ObjectKeyDecoder[String] with
     def fromString(key: String): String = key
-  given ObjectKeyDecoder[Int] = ObjectKeyDecoder[String].map(_.toInt)
-  given ObjectKeyDecoder[Float] = ObjectKeyDecoder[String].map(_.toFloat)
-  given ObjectKeyDecoder[Double] = ObjectKeyDecoder[String].map(_.toDouble)
+  given int: ObjectKeyDecoder[Int] = string.map(_.toInt)
+  given float: ObjectKeyDecoder[Float] = string.map(_.toFloat)
+  given long: ObjectKeyDecoder[Long] = string.map(_.toLong)
+  given double: ObjectKeyDecoder[Double] = string.map(_.toDouble)
 
   given Functor[ObjectKeyDecoder] with
     def map[A, B](fa: ObjectKeyDecoder[A])(f: A => B): ObjectKeyDecoder[B] =

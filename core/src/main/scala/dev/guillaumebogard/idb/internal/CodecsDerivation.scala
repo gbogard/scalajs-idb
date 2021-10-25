@@ -75,8 +75,8 @@ private[internal] object Derivation:
   inline final def summonEncoders[T <: Tuple]: Array[Encoder[_]] = summonEncodersRec[T].toArray
 
   inline final def summonEncoder[A]: Encoder[A] = summonFrom {
-    case encodeA: Encoder[A] => encodeA
-    case _: Mirror.Of[A]     => ObjectEncoder.derived[A]
+    case encodeA: Encoder[A]       => encodeA
+    case _: Mirror.Of[A]           => ObjectEncoder.derived[A]
   }
 
   inline final def summonDecoder[A]: Decoder[A] = summonFrom {
