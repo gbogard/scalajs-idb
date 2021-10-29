@@ -39,7 +39,12 @@ val idbKeyRange: IDBKeyRangeFactory = js.native
 trait IDBKeyRangeFactory extends js.Object {
   def lowerBound(lowerBound: Key, lowerOpen: Boolean = false): KeyRange
   def upperBound(upperBound: Key, upperOpen: Boolean = false): KeyRange
-  def bound(lowerBound: Key, upperBound: Key, lowerOpen: Boolean = false, upperOpen: Boolean = false): KeyRange
+  def bound(
+      lowerBound: Key,
+      upperBound: Key,
+      lowerOpen: Boolean = false,
+      upperOpen: Boolean = false
+  ): KeyRange
   def only(key: Key): KeyRange
 }
 
@@ -97,6 +102,7 @@ private[internal] trait AddRequest extends IDBRequest[AddRequest, Key]
 @js.native
 private[internal] trait IDBObjectStore extends js.Object {
   def get(key: Key): IDBRequest[Unit, js.UndefOr[js.Any]] = js.native
+  def delete(keyOrKeyRange: Key | KeyRange): IDBRequest[Unit, Unit] = js.native
   def getAll(range: KeyRange | Null, count: Int): IDBRequest[Unit, js.Array[js.Any]] = js.native
   def add[Value <: js.Any](value: Value, key: js.UndefOr[Key]): AddRequest = js.native
   def put[Value <: js.Any](value: Value, key: js.UndefOr[Key]): AddRequest = js.native

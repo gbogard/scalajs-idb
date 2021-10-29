@@ -22,6 +22,7 @@ type Transaction[T] = Free[TransactionA, T]
 
 enum TransactionA[T]:
   case Add(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
+  case Delete(store: ObjectStore.Name, keyOrKeyRange: Key | KeyRange) extends TransactionA[Unit]
   case Put(store: ObjectStore.Name, value: js.Any, key: Option[Key]) extends TransactionA[Key]
   case Get(store: ObjectStore.Name, key: Key) extends TransactionA[Option[js.Any]]
   case GetAll(store: ObjectStore.Name, keyRange: Option[KeyRange], count: Int)
@@ -49,3 +50,5 @@ object Transaction:
     Free.liftF(TransactionA.Add(store, value, key))
   def getAll(store: ObjectStore.Name, range: Option[KeyRange] = None, count: Int = 0) =
     Free.liftF(TransactionA.GetAll(store, range, count))
+  def delete(store: ObjectStore.Name, keyOrKeyRange: Key | KeyRange) =
+    Free.liftF(TransactionA.Delete(store, keyOrKeyRange))

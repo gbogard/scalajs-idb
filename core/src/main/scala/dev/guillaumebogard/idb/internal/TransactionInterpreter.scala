@@ -45,4 +45,6 @@ private class Transactor(idbTransaction: IDBTransaction)(using ec: ExecutionCont
       idbTransaction.objectStoreFuture(store).flatMap(_.putFuture(value, key))
     case api.TransactionA.Add(store, value, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.addFuture(value, key))
+    case api.TransactionA.Delete(store, keyOrKeyRange) =>
+      idbTransaction.objectStoreFuture(store).flatMap(_.deleteFuture(keyOrKeyRange))
   }

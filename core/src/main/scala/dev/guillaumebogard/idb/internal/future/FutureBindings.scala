@@ -77,6 +77,12 @@ extension (store: IDBObjectStore)(using ec: ExecutionContext)
       .flatMap(runRequest)
       .map(_.result.toOption)
 
+  private[internal] def deleteFuture(keyOrKeyRange: api.Key | api.KeyRange): Future[Unit] =
+    Future
+      .fromTry(Try(store.delete(keyOrKeyRange)))
+      .flatMap(runRequest)
+      .map(_.result)
+
   private[internal] def getAllFuture(range: Option[api.KeyRange], count: Int): Future[Seq[js.Any]] =
     Future
       .fromTry(Try(store.getAll(range.orNull, count)))

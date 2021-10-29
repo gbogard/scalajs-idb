@@ -31,6 +31,7 @@ trait ObjectStore[T]:
     Transaction.getAll(name, range, count).map(_.map(v => decoder.decode(v)).toSeq)
 
   def getAll(range: KeyRange)(using Decoder[T]): Transaction[Seq[T]] = getAll(Some(range))
+
   def getAll(lowerBound: Key, upperBound: Key)(using Decoder[T]): Transaction[Seq[T]] = getAll(
     KeyRange.bound(lowerBound, upperBound)
   )
