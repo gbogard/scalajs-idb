@@ -27,9 +27,10 @@ breaking changes will be regularly introduced.**
 
 ```scala
 libraryDependencies ++= Seq(
-  "dev.guillaumebogard" %%% "scalajs-idb-core" % "0.1.0"
+  "dev.guillaumebogard" %%% "scalajs-idb-core" % "0.2.0"
   // Optional
-  "dev.guillaumebogard" %%% "scalajs-idb-cats-effect" % "0.1.0",
+  "dev.guillaumebogard" %%% "scalajs-idb-cats-effect" % "0.2.0",
+  "dev.guillaumebogard" %%% "scalajs-idb-java-time" % "0.2.0"
 )
 ```
 
@@ -131,7 +132,7 @@ val database: Future[Database] =
 
 #### Cats Effect backend (as part of `scalajs-idb-cats-effect`)
 
-This library also provdes a backend for any type `F[_]` with an implicit `cats.effect.Async[F]`.
+This library also provides a backend for any type `F[_]` with an implicit `cats.effect.Async[F]`.
 This includes `cats.effect.IO`. All you have to do is import `dev.guillaumebogard.idb.cats.given`.
 
 ### Schema management
@@ -170,7 +171,18 @@ This library uses type classes to (de-)serialize Scala types into JS types that 
 Each `ObjectStore` is associated with a type of values, and certain operations require you to an instance 
 of `Encoder`, `ObjectEncoder` or `Decoder` for that type, depending on the operation.
 
-// TODO: Improve doc
+To decide whether to use `Encoder` or `ObjectEncoder` you need to determine if you will be using *inline keys* or *out-of-line keys*:
+
+- If your object stores uses *out-of-line keys* it means that you will be providing an explicit key with each write operation.
+You can insert any value in it as long your value's type implements `Encoder`.
+- If your object stores uses *inline keys*  it means the key associated with a given value can be derived from the value itself by
+following a specific path inside the object.
+You can insert any value in it as long your value's type implements `ObjectEncoder`.
+
+This library provides instances for the most common Scala data types. Maps of type `Map[K, V]` can be encoded as long
+as `K` implements `ObjectKeyEncoder` and `V` implements encoder.
+
+A separate module provides bindings for the Java time API.
 
 ## License and code of conduct
 
@@ -189,12 +201,16 @@ You are expected to follow the [Scala Code of Conduct](https://www.scala-lang.or
     - [x] `objectStore`
   - `IDBObjectStore`
     - [x] `add`
+    - [x] `put`
+    - [x] `getAll`
+    - [x] `delete`
 - High-level bindings:
   - `ObjectStore`:
     - [x] `add`
     - [x] `put`
     - [x] `get`
     - [x] `getAll`
+    - [x] `delete`
     - [ ] `openCursor`
 - [x] Future Backend
 - [x] Cats Effect IO Backend 
