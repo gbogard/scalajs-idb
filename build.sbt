@@ -43,7 +43,6 @@ lazy val publishSettings = Seq(
     checkSnapshotDependencies,
     inquireVersions,
     runClean,
-    runTest,
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
