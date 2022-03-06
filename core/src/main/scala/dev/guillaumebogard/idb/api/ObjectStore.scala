@@ -38,6 +38,8 @@ trait ObjectStore[T]:
     KeyRange.bound(lowerBound, upperBound)
   )
 
+  def delete(key: Key | KeyRange): Transaction[Unit] = Transaction.delete(name, key)
+
 object ObjectStore:
   opaque type Name = String
   object Name:

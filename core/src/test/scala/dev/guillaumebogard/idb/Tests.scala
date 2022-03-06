@@ -97,6 +97,56 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
             })
         }
       }
+
+      test("Delete single key") {
+        val users = List(
+          User(1, "Paul"),
+          User(2, "John"),
+          User(3, "George"),
+          User(4, "Ringo")
+        )
+        toFuture {
+          Database
+            .open[F](dbName, schema)
+            .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
+              for
+                _ <- users.traverse_(usersStore.put)
+                dataset1 <- usersStore.getAll()
+                _ <- usersStore.delete(Key(2))
+                dataset2 <- usersStore.getAll()
+              yield assert(
+                dataset1 == users && dataset2 == users.filterNot(_.id == 2)
+              )
+            })
+        }
+      }
+
+      test("Delete key range") {
+        val users = List(
+          User(1, "Paul"),
+          User(2, "John"),
+          User(3, "George"),
+          User(4, "Ringo")
+        )
+        toFuture {
+          Database
+            .open[F](dbName, schema)
+            .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
+              for
+                _ <- users.traverse_(usersStore.put)
+                dataset1 <- usersStore.getAll()
+                _ <- usersStore.delete(KeyRange.bound(2.toKey, 3.toKey))
+                dataset2 <- usersStore.getAll()
+              yield assert(
+                dataset1 == users && dataset2 == List(
+                  User(1, "Paul"),
+                  User(4, "Ringo")
+                )
+              )
+            })
+        }
+      }
+
     }
   }
 

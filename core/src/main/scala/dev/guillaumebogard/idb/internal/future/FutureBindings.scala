@@ -115,14 +115,3 @@ private def runRequest[T, R](req: IDBRequest[T, R]): Future[IDBRequestResult[T, 
     req.onerror = _ => cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
   }
 
-  given ec: ExecutionContext = ???
-  val program: Future[String] =
-    for
-      dbRes <- Database.open(upgrade)(api.Database.Name("test"), 1)
-      db = dbRes.database
-      usersStoreName = api.ObjectStore.Name("users")
-      transaction <- db.transactionFuture(Seq(usersStoreName), api.Transaction.Mode.ReadWrite)
-      usersStore <- transaction.objectStoreFuture(usersStoreName)
-      _ <- usersStore.putFuture("Paul", api.toKey(1).some)
-      user <- usersStore.getFuture(api.toKey(1))
-    yield user.asInstanceOf

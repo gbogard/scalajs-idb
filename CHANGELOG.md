@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased:
 
+## v0.2.0:
+
 ### Changed
 
 - Codec and ObjectCodec have been replaced with more specialized type classes: Encoder, ObjectEncoder
