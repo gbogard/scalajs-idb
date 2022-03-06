@@ -3,6 +3,7 @@ import xerial.sbt.Sonatype._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import ReleaseTransformations._
 
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / organization := "dev.guillaumebogard"
 ThisBuild / organizationName := "Guillaume Bogard"
 ThisBuild / startYear := Some(2021)
