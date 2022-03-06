@@ -27,7 +27,9 @@ trait ObjectStore[T]:
   def get(key: Key)(using decoder: Decoder[T]): Transaction[Option[T]] =
     Transaction.get(name, key).map(_.map(v => decoder.decode(v)))
 
-  def getAll(range: Option[KeyRange] = None, count: Int = 0)(using decoder: Decoder[T]): Transaction[Seq[T]] =
+  def getAll(range: Option[KeyRange] = None, count: Int = 0)(using
+      decoder: Decoder[T]
+  ): Transaction[Seq[T]] =
     Transaction.getAll(name, range, count).map(_.map(v => decoder.decode(v)).toSeq)
 
   def getAll(range: KeyRange)(using Decoder[T]): Transaction[Seq[T]] = getAll(Some(range))
@@ -56,20 +58,22 @@ object ObjectStore:
       val name = Name(objectStoreName)
       val options = CreateObjectStoreOptions(keypath, autoIncrement)
 
-/** A [[ObjectStoreWithInlineKeys]] is an object store whose keys can be automatically calculated, either from
-  * a generator or by fetching a [[KeyPath]] on the inserted objects. It means that the [[put]] and [[add]]
-  * operations for example don't require you to provide an explicit key. To insert a value inside a
-  * [[ObjectStoreWithInlineKeys]], you need an [[ObjectEncoder]].
+/** A [[ObjectStoreWithInlineKeys]] is an object store whose keys can be automatically calculated,
+  * either from a generator or by fetching a [[KeyPath]] on the inserted objects. It means that the
+  * [[put]] and [[add]] operations for example don't require you to provide an explicit key. To
+  * insert a value inside a [[ObjectStoreWithInlineKeys]], you need an [[ObjectEncoder]].
   */
 trait ObjectStoreWithInlineKeys[T] extends ObjectStore[T]:
   val options: CreateObjectStoreOptions
 
-  def put(value: T)(using encoder: ObjectEncoder[T]) = Transaction.put(name, encoder.encode(value), None)
-  def add(value: T)(using encoder: ObjectEncoder[T]) = Transaction.add(name, encoder.encode(value), None)
+  def put(value: T)(using encoder: ObjectEncoder[T]) =
+    Transaction.put(name, encoder.encode(value), None)
+  def add(value: T)(using encoder: ObjectEncoder[T]) =
+    Transaction.add(name, encoder.encode(value), None)
 
-/** A [[ObjectStoreWithOutOfLineKeys]] is an object store whose keys are explicitly provided by you when you
-  * insert records in it. To insert a value inside a [[ObjectStoreWithOutOfLineKeys]], you need a
-  * simple[[Encoder]].
+/** A [[ObjectStoreWithOutOfLineKeys]] is an object store whose keys are explicitly provided by you
+  * when you insert records in it. To insert a value inside a [[ObjectStoreWithOutOfLineKeys]], you
+  * need a simple[[Encoder]].
   */
 trait ObjectStoreWithOutOfLineKeys[T] extends ObjectStore[T]:
 

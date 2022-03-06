@@ -17,7 +17,7 @@
 package dev.guillaumebogard.idb.api
 
 import scala.scalajs.js
-import js.JSConverters._
+import js.JSConverters.*
 
 enum KeyPath:
   case Empty

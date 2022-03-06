@@ -20,7 +20,7 @@ import cats.implicits.*
 import dev.guillaumebogard.idb.api.*
 import dev.guillaumebogard.idb.api.ObjectEncoder.given
 import scala.scalajs.js
-import utest._
+import utest.*
 
 object CodecTests extends TestSuite:
 
@@ -131,5 +131,8 @@ object CodecTests extends TestSuite:
       case (MyBool.False, MyBool.False) => true
       case _                            => false
 
-  private def doTest[T: Encoder: Decoder](value: T, isEqual: (T, T) => Boolean = (a: T, b: T) => a == b) =
+  private def doTest[T: Encoder: Decoder](
+      value: T,
+      isEqual: (T, T) => Boolean = (a: T, b: T) => a == b
+  ) =
     assert(isEqual(Decoder[T].decode(Encoder[T].encode(value)), value))

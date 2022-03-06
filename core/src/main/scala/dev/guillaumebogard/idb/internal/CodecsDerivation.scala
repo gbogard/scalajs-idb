@@ -36,7 +36,7 @@ trait EncoderDerivation:
               val encoder = encoders(ix)
               (label, encoder.encode(value.asInstanceOf))
           })
-          js.Dictionary[js.Any](pairs.toSeq: _*).asInstanceOf[js.Object]
+          js.Dictionary[js.Any](pairs.toSeq*).asInstanceOf[js.Object]
         case m: Mirror.SumOf[T] =>
           val ix = m.ordinal(value)
           val label = labels(ix)
@@ -71,12 +71,12 @@ trait DecoderDerivation:
 
 private[internal] object Derivation:
   inline final def summonLabels[T <: Tuple]: Array[String] = summonLabelsRec[T].toArray
-  inline final def summonDecoders[T <: Tuple]: Array[Decoder[_]] = summonDecodersRec[T].toArray
-  inline final def summonEncoders[T <: Tuple]: Array[Encoder[_]] = summonEncodersRec[T].toArray
+  inline final def summonDecoders[T <: Tuple]: Array[Decoder[?]] = summonDecodersRec[T].toArray
+  inline final def summonEncoders[T <: Tuple]: Array[Encoder[?]] = summonEncodersRec[T].toArray
 
   inline final def summonEncoder[A]: Encoder[A] = summonFrom {
-    case encodeA: Encoder[A]       => encodeA
-    case _: Mirror.Of[A]           => ObjectEncoder.derived[A]
+    case encodeA: Encoder[A] => encodeA
+    case _: Mirror.Of[A]     => ObjectEncoder.derived[A]
   }
 
   inline final def summonDecoder[A]: Decoder[A] = summonFrom {
@@ -84,19 +84,16 @@ private[internal] object Derivation:
     case _: Mirror.Of[A]     => Decoder.derived[A]
   }
 
-  inline final def summonLabelsRec[T <: Tuple]: List[String] = inline erasedValue[T] match {
+  inline final def summonLabelsRec[T <: Tuple]: List[String] = inline erasedValue[T] match
     case _: EmptyTuple => Nil
     case _: (t *: ts)  => constValue[t].asInstanceOf[String] :: summonLabelsRec[ts]
-  }
 
-  inline final def summonDecodersRec[T <: Tuple]: List[Decoder[_]] =
-    inline erasedValue[T] match {
+  inline final def summonDecodersRec[T <: Tuple]: List[Decoder[?]] =
+    inline erasedValue[T] match
       case _: EmptyTuple => Nil
       case _: (t *: ts)  => summonDecoder[t] :: summonDecodersRec[ts]
-    }
 
-  inline final def summonEncodersRec[T <: Tuple]: List[Encoder[_]] =
-    inline erasedValue[T] match {
+  inline final def summonEncodersRec[T <: Tuple]: List[Encoder[?]] =
+    inline erasedValue[T] match
       case _: EmptyTuple => Nil
       case _: (t *: ts)  => summonEncoder[t] :: summonEncodersRec[ts]
-    }

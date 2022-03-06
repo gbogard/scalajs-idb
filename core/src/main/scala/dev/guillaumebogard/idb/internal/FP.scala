@@ -16,9 +16,10 @@
 
 package dev.guillaumebogard.idb.internal
 
-import scala.concurrent._
+import scala.concurrent.*
 
-/** The [[Async]] type class, ported from Cats Effect to avoid unnecessary dependencies in the core project.
+/** The [[Async]] type class, ported from Cats Effect to avoid unnecessary dependencies in the core
+  * project.
   */
 trait Async[F[_]]:
   def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A]
@@ -27,11 +28,10 @@ object Async:
   def apply[F[_]](using async: Async[F]): Async[F] = async
 
   given Async[Future] with
-    def async[A](k: (Either[Throwable, A] => Unit) => Unit): Future[A] = {
+    def async[A](k: (Either[Throwable, A] => Unit) => Unit): Future[A] =
       val promise = Promise[A]()
       val cb: Either[Throwable, A] => Unit =
         case Right(res) => promise.success(res)
         case Left(err)  => promise.failure(err)
       k(cb)
       promise.future
-    }

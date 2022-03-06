@@ -20,14 +20,13 @@ import dev.guillaumebogard.idb.api.*
 import dev.guillaumebogard.idb.internal.lowlevel.*
 
 private[internal] object SchemaExecutor:
-  def unsafeMigrateSchema(event: UpgradeNeededEvent, schema: Schema): Unit = {
+  def unsafeMigrateSchema(event: UpgradeNeededEvent, schema: Schema): Unit =
     val db = event.target.result
     schema
       .getPendingOperations(event.oldVersion)
       .foreach({
-        case SchemaOperation.CreateObjectStore(store: ObjectStoreWithInlineKeys[_]) =>
+        case SchemaOperation.CreateObjectStore(store: ObjectStoreWithInlineKeys[?]) =>
           db.createObjectStore(store.name, store.options)
         case SchemaOperation.CreateObjectStore(store) =>
           db.createObjectStore(store.name)
       })
-  }

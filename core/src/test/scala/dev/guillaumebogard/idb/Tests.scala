@@ -23,7 +23,7 @@ import dev.guillaumebogard.idb.api.*
 import scala.concurrent.{Future, ExecutionContext}
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportAll
-import utest._
+import utest.*
 
 given ec: ExecutionContext = ExecutionContext.global
 
@@ -36,7 +36,7 @@ val championsStore = ObjectStore[Champion]("champions")
 case class User(id: Int, name: String) derives ObjectEncoder, Decoder
 val usersStore = ObjectStore.withInlineKeys[User]("users", KeyPath("id"))
 
-class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]) extends TestSuite {
+class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]) extends TestSuite:
   val tests = Tests {
     test("ChampionsStore (Out-of-line keys)") {
       test("Simple put and get") {
@@ -49,10 +49,10 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
           Database
             .open[F](dbName, schema)
             .flatMap(_.readWrite(NonEmptyList.of(championsStore.name)) {
-              for {
+              for
                 _ <- championsStore.put(illaoi, key)
                 result <- championsStore.get(key)
-              } yield assert(result === Some(illaoi))
+              yield assert(result === Some(illaoi))
             })
         }
       }
@@ -68,10 +68,10 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
           Database
             .open[F](dbName, schema)
             .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
-              for {
+              for
                 insertedKey <- usersStore.put(johnDoe)
                 result <- usersStore.get(insertedKey)
-              } yield assert(result == Some(johnDoe) && insertedKey == johnDoe.id.toKey)
+              yield assert(result == Some(johnDoe) && insertedKey == johnDoe.id.toKey)
             })
         }
       }
@@ -87,16 +87,17 @@ class TestsUsingBackend[F[_]: Backend: Monad](toFuture: [A] => F[A] => Future[A]
           Database
             .open[F](dbName, schema)
             .flatMap(_.readWrite(NonEmptyList.of(usersStore.name)) {
-              for {
+              for
                 _ <- users.traverse_(usersStore.put)
                 completeDataset <- usersStore.getAll()
                 partialDataset <- usersStore.getAll(KeyRange.bound(2.toKey, 3.toKey))
-              } yield assert(completeDataset.toList == users && partialDataset == users.drop(1).take(2))
+              yield assert(
+                completeDataset.toList == users && partialDataset == users.drop(1).take(2)
+              )
             })
         }
       }
     }
   }
-}
 
 object FutureTests extends TestsUsingBackend[Future]([A] => (fa: Future[A]) => fa)

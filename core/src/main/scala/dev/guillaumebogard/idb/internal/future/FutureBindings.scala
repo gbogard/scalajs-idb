@@ -22,7 +22,7 @@ import dev.guillaumebogard.idb.api
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Try
 import scalajs.js
-import js.JSConverters._
+import js.JSConverters.*
 
 private[internal] object Database:
   def open[R](
@@ -33,12 +33,18 @@ private[internal] object Database:
       Async[Future].async { cb =>
         openReq.onsuccess = event =>
           cb(
-            Right(IDBOpenResult(openReq, event, event.target.result.asInstanceOf[IDBDatabase], upgradeResult))
+            Right(
+              IDBOpenResult(
+                openReq,
+                event,
+                event.target.result.asInstanceOf[IDBDatabase],
+                upgradeResult
+              )
+            )
           )
-        openReq.onerror = _ => cb(Left(js.JavaScriptException(openReq.error.asInstanceOf[DOMException])))
-        openReq.onupgradeneeded = event => {
-          upgradeResult = Some(onUpgrade(event))
-        }
+        openReq.onerror =
+          _ => cb(Left(js.JavaScriptException(openReq.error.asInstanceOf[DOMException])))
+        openReq.onupgradeneeded = event => upgradeResult = Some(onUpgrade(event))
       }
     }
 
@@ -103,11 +109,20 @@ extension (store: IDBObjectStore)(using ec: ExecutionContext)
 
 private def runRequest[T, R](req: IDBRequest[T, R]): Future[IDBRequestResult[T, R]] =
   Async[Future].async { cb =>
-    req.onsuccess = event => {
+    req.onsuccess = event =>
       val result = IDBRequestResult(req, event, req.result.asInstanceOf[R])
       cb(Right(result))
-    }
-    req.onerror = _ => {
-      cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
-    }
+    req.onerror = _ => cb(Left(js.JavaScriptException(req.error.asInstanceOf[DOMException])))
   }
+
+  given ec: ExecutionContext = ???
+  val program: Future[String] =
+    for
+      dbRes <- Database.open(upgrade)(api.Database.Name("test"), 1)
+      db = dbRes.database
+      usersStoreName = api.ObjectStore.Name("users")
+      transaction <- db.transactionFuture(Seq(usersStoreName), api.Transaction.Mode.ReadWrite)
+      usersStore <- transaction.objectStoreFuture(usersStoreName)
+      _ <- usersStore.putFuture("Paul", api.toKey(1).some)
+      user <- usersStore.getFuture(api.toKey(1))
+    yield user.asInstanceOf

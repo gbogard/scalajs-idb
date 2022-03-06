@@ -36,15 +36,17 @@ extension (db: IDBDatabase)
 
 private class Transactor(idbTransaction: IDBTransaction)(using ec: ExecutionContext)
     extends (api.TransactionA ~> Future):
-  def apply[A](xa: api.TransactionA[A]): Future[A] = xa match {
+  def apply[A](xa: api.TransactionA[A]): Future[A] = xa match
     case api.TransactionA.Get(store, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.getFuture(key))
     case api.TransactionA.GetAll(store, range, count) =>
-      idbTransaction.objectStoreFuture(store).flatMap(_.getAllFuture(range, count)).asInstanceOf[Future[A]]
+      idbTransaction
+        .objectStoreFuture(store)
+        .flatMap(_.getAllFuture(range, count))
+        .asInstanceOf[Future[A]]
     case api.TransactionA.Put(store, value, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.putFuture(value, key))
     case api.TransactionA.Add(store, value, key) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.addFuture(value, key))
     case api.TransactionA.Delete(store, keyOrKeyRange) =>
       idbTransaction.objectStoreFuture(store).flatMap(_.deleteFuture(keyOrKeyRange))
-  }

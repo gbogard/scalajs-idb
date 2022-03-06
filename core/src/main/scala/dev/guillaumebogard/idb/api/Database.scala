@@ -22,7 +22,9 @@ import cats.free.Free
 import dev.guillaumebogard.idb.internal
 
 trait Database[F[_]]:
-  def transact[T](mode: Transaction.Mode, stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T]
+  def transact[T](mode: Transaction.Mode, stores: NonEmptyList[ObjectStore.Name])(
+      transaction: Transaction[T]
+  ): F[T]
 
   def readOnly[T](stores: NonEmptyList[ObjectStore.Name])(transaction: Transaction[T]): F[T] =
     transact(Transaction.Mode.ReadOnly, stores)(transaction)

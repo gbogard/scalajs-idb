@@ -12,6 +12,7 @@ to be manually declared.
 
 ### Added
 
+- Added support for the `IDBObjectStore.delete` operation
 - Added instances of Encoder and Decoder for String, Boolean, numeric types and some collections
 - Added instances of Encoder and Decoder for Option
 - Added instances of Encoder and Decoder for java.time.Instant and java.time.LocalDate in a new module: scalajs-idb-java-time
@@ -23,7 +24,7 @@ to be manually declared.
 
 ## v0.1.0
 
-The very first reelase of scalajs-idb
+The very first release of scalajs-idb
 
 ### Added
 

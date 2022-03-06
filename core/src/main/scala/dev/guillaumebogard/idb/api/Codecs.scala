@@ -26,8 +26,8 @@ import scala.util.*
 import scalajs.js
 import js.JSConverters.*
 
-/** A type class describing the ability to turn Scala types into Javascript types, so they can stored in an
-  * object store.
+/** A type class describing the ability to turn Scala types into Javascript types, so they can
+  * stored in an object store.
   */
 trait Encoder[T]:
   def encode(value: T): js.Any
@@ -59,8 +59,8 @@ object Encoder:
   given Contravariant[Encoder] with
     def contramap[A, B](fa: Encoder[A])(f: B => A): Encoder[B] = (value: B) => fa.encode(f(value))
 
-/** A type class describing the ability to turn Javascript types into Scala types so they can be retrieved
-  * from an object store.
+/** A type class describing the ability to turn Javascript types into Scala types so they can be
+  * retrieved from an object store.
   */
 trait Decoder[T]:
   def decode(value: js.Any): T
@@ -92,15 +92,17 @@ object Decoder extends DecoderDerivation:
   given vector[T](using decoder: Decoder[T]): Decoder[Vector[T]] = seq.map(_.toVector)
 
   given map[K, V](using keyDecoder: ObjectKeyDecoder[K], decoder: Decoder[V]): Decoder[Map[K, V]] =
-    Decoder.jsAny[js.Dictionary[js.Any]]
+    Decoder
+      .jsAny[js.Dictionary[js.Any]]
       .map(_.toMap.map((k: String, v: js.Any) => (keyDecoder.fromString(k), decoder.decode(v))))
 
   given Functor[Decoder] with
-    def map[A, B](fa: Decoder[A])(f: A => B): Decoder[B] = (jsValue: js.Any) => f(fa.decode(jsValue))
+    def map[A, B](fa: Decoder[A])(f: A => B): Decoder[B] = (jsValue: js.Any) =>
+      f(fa.decode(jsValue))
 
-/** A type class describing the ability to turn Scala types into Javascript Objects. Similar to [[Encoder]],
-  * except the Scala values are translated specifically to objects, not just any Javascript type. This
-  * provides additional guarantees for object stores with in-line keys.
+/** A type class describing the ability to turn Scala types into Javascript Objects. Similar to
+  * [[Encoder]], except the Scala values are translated specifically to objects, not just any
+  * Javascript type. This provides additional guarantees for object stores with in-line keys.
   */
 trait ObjectEncoder[T] extends Encoder[T]:
   def encode(value: T): js.Any = toObject(value)
@@ -114,9 +116,15 @@ object ObjectEncoder extends EncoderDerivation:
     */
   def castToObject[T <: js.Object]: ObjectEncoder[T] = v => v.asInstanceOf[js.Object]
 
-  given map[K, V](using keyEncoder: ObjectKeyEncoder[K], encoder: Encoder[V]): ObjectEncoder[Map[K, V]] with
+  given map[K, V](using
+      keyEncoder: ObjectKeyEncoder[K],
+      encoder: Encoder[V]
+  ): ObjectEncoder[Map[K, V]] with
     def toObject(map: Map[K, V]) =
-      map.map((k, v) => (keyEncoder.toKey(k), encoder.encode(v))).toJSDictionary.asInstanceOf[js.Object]
+      map
+        .map((k, v) => (keyEncoder.toKey(k), encoder.encode(v)))
+        .toJSDictionary
+        .asInstanceOf[js.Object]
 
   given Contravariant[ObjectEncoder] with
     def contramap[A, B](fa: ObjectEncoder[A])(f: B => A): ObjectEncoder[B] = (value: B) =>

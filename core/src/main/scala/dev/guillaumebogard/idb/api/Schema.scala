@@ -33,4 +33,4 @@ object Schema:
       schema.drop(Math.max(0, oldVersion - 1))
 
 enum SchemaOperation:
-  case CreateObjectStore(store: ObjectStore[_])
+  case CreateObjectStore(store: ObjectStore[?])

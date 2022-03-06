@@ -42,7 +42,8 @@ object Backend:
           new api.Database[F]:
             def transact[T](mode: api.Transaction.Mode, stores: NonEmptyList[api.ObjectStore.Name])(
                 transaction: api.Transaction[T]
-            ): F[T] = backend.fromFuture(backend.delay(db.transactFuture(stores, mode)(transaction)))
+            ): F[T] =
+              backend.fromFuture(backend.delay(db.transactFuture(stores, mode)(transaction)))
         )
     })
 
